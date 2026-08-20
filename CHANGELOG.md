@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.5.1-alpha
+- Ran the project against the official Godot 4.3 editor in GitHub Actions instead of relying only on static/source inspection.
+- Fixed GDScript parser failures caused by Variant type inference warnings being treated as errors in input, board, FX, car-view and world-builder code.
+- Added explicit type boundaries around raycast colliders, board state maps, movement vectors, procedural-mesh dimensions and world-building math.
+- Added a bounded Godot solver baseline and per-level diagnostics so CI cannot hang silently on puzzle search regressions.
+- Replaced the misleading headless/dummy-renderer scene boot with a real GL Compatibility smoke test under Xvfb.
+- Added parser/compiler error detection to the import gate.
+- Verified Paris = 9 moves / 683 states, Cairo = 12 / 270, Tokyo = 12 / 1171 in native Godot 4.3.
+- Godot import, all puzzle tests, validator tests, board rules and graphical main-scene boot now pass in CI.
+
 ## 0.5.0-alpha
 - Reworked pointer input so taps trigger on release and drags can begin even on top of cars.
 - Split endcap and body pickers onto deterministic collision layers to remove overlap ambiguity.
