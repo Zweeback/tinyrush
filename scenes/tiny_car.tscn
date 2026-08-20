@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/view/car_view.gd" id="1"]
+
+[node name="TinyCar" type="Node3D"]
+script = ExtResource("1")
+
+[node name="VisualRoot" type="Node3D" parent="."]
+
+[node name="PickerRoot" type="Node3D" parent="."]
