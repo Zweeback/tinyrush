@@ -1,0 +1,55 @@
+name: Parking Panic CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  static-preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run data, resource and scene-contract audits
+        run: python tools/run_checks.py
+
+  godot-runtime:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    env:
+      GODOT_VERSION: '4.3'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download official Godot editor
+        run: |
+          curl -L --fail -o godot.zip "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q godot.zip
+          mv "Godot_v${GODOT_VERSION}-stable_linux.x86_64" godot
+          chmod +x godot
+      - name: Import project and reject parser/compiler errors
+        run: |
+          set -o pipefail
+          timeout 45s ./godot --headless --path . --import 2>&1 | tee godot-import.log
+          if grep -E 'SCRIPT ERROR: (Parse Error|Compile Error)|ERROR: Failed to load script' godot-import.log; then
+            echo 'Godot import reported a script parser/compiler error.'
+            exit 1
+          fi
+      - name: Verify Paris solver baseline
+        run: timeout 45s ./godot --headless --path . --script res://tests/test_solver.gd
+      - name: Verify all puzzle solutions
+        run: timeout 60s ./godot --headless --path . --script res://tests/test_all_levels.gd
+      - name: Verify level validator
+        run: timeout 30s ./godot --headless --path . --script res://tests/test_level_validator.gd
+      - name: Verify board rules
+        run: timeout 30s ./godot --headless --path . --script res://tests/test_board_rules.gd
+      - name: Boot main scene with real GL compatibility renderer under Xvfb
+        run: |
+          set -o pipefail
+          xvfb-run -a timeout 30s ./godot --path . --rendering-method gl_compatibility --quit-after 5 2>&1 | tee godot-smoke.log
+          if grep -E 'SCRIPT ERROR:|ERROR: Failed to load script|Invalid call\.' godot-smoke.log; then
+            echo 'Godot graphical smoke test reported a script/runtime error.'
+            exit 1
+          fi

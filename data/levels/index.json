@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "levels": [
+    "res://data/levels/paris_01.json",
+    "res://data/levels/cairo_01.json",
+    "res://data/levels/tokyo_01.json"
+  ]
+}
