@@ -33,21 +33,23 @@ func set_selected(value: bool) -> void:
 	selected = value
 	if selection_marker != null:
 		selection_marker.visible = selected
-	var target_scale := Vector3(1.045, 1.045, 1.045) if selected else Vector3.ONE
-	var tween := create_tween()
+	var target_scale: Vector3 = Vector3(1.045, 1.045, 1.045) if selected else Vector3.ONE
+	var tween: Tween = create_tween()
 	tween.tween_property(self, "scale", target_scale, 0.09).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 
 func _build_visuals() -> void:
 	_clear_children(visual_root)
-	var full_length := float(length_cells) * cell_size * 0.84
+	var full_length: float = float(length_cells) * cell_size * 0.84
 	_box(Vector3(0.78, 0.30, full_length), Vector3(0, 0.20, 0), body_color, 0.06)
-	_box(Vector3(0.58, 0.28, min(0.86, full_length * 0.44)), Vector3(0, 0.47, -full_length * 0.03), body_color.lightened(0.14), 0.03)
-	_box(Vector3(0.48, 0.17, 0.05), Vector3(0, 0.50, min(0.42, full_length * 0.23)), Color(0.04, 0.10, 0.16, 1), 0.04)
-	_box(Vector3(0.48, 0.16, 0.05), Vector3(0, 0.47, -min(0.42, full_length * 0.23)), Color(0.04, 0.10, 0.16, 1), 0.02)
+	_box(Vector3(0.58, 0.28, float(min(0.86, full_length * 0.44))), Vector3(0, 0.47, -full_length * 0.03), body_color.lightened(0.14), 0.03)
+	_box(Vector3(0.48, 0.17, 0.05), Vector3(0, 0.50, float(min(0.42, full_length * 0.23))), Color(0.04, 0.10, 0.16, 1), 0.04)
+	_box(Vector3(0.48, 0.16, 0.05), Vector3(0, 0.47, -float(min(0.42, full_length * 0.23))), Color(0.04, 0.10, 0.16, 1), 0.02)
 
-	var wheel_z := max(0.28, full_length * 0.33)
-	for side in [-1.0, 1.0]:
-		for z_pos in [-wheel_z, wheel_z]:
+	var wheel_z: float = float(max(0.28, full_length * 0.33))
+	for side_value in [-1.0, 1.0]:
+		var side := float(side_value)
+		for z_value in [-wheel_z, wheel_z]:
+			var z_pos := float(z_value)
 			var wheel := MeshInstance3D.new()
 			var cylinder := CylinderMesh.new()
 			cylinder.top_radius = 0.15
@@ -60,7 +62,8 @@ func _build_visuals() -> void:
 			wheel.material_override = _material(Color(0.025, 0.03, 0.04, 1), 0.0, 0.78)
 			visual_root.add_child(wheel)
 
-	for x_pos in [-0.22, 0.22]:
+	for x_value in [-0.22, 0.22]:
+		var x_pos := float(x_value)
 		_box(Vector3(0.13, 0.09, 0.045), Vector3(x_pos, 0.22, full_length * 0.5 + 0.02), Color(1.0, 0.90, 0.56, 1), 2.0)
 		_box(Vector3(0.12, 0.09, 0.045), Vector3(x_pos, 0.22, -full_length * 0.5 - 0.02), Color(1.0, 0.10, 0.22, 1), 1.7)
 
@@ -78,8 +81,7 @@ func _build_visuals() -> void:
 
 func _build_pickers() -> void:
 	_clear_children(picker_root)
-	var full_length := float(length_cells) * cell_size * 0.84
-
+	var full_length: float = float(length_cells) * cell_size * 0.84
 	var body_area := Area3D.new()
 	body_area.collision_layer = BODY_LAYER
 	body_area.collision_mask = 0
@@ -88,13 +90,13 @@ func _build_pickers() -> void:
 	body_area.position = Vector3(0, 0.30, 0)
 	var body_shape_node := CollisionShape3D.new()
 	var body_shape := BoxShape3D.new()
-	body_shape.size = Vector3(0.96, 1.00, max(0.72, full_length * 0.72))
+	body_shape.size = Vector3(0.96, 1.00, float(max(0.72, full_length * 0.72)))
 	body_shape_node.shape = body_shape
 	body_area.add_child(body_shape_node)
 	picker_root.add_child(body_area)
 
-	var picker_depth := min(cell_size * 0.42, full_length * 0.28)
-	var picker_center := max(0.16, full_length * 0.5 - picker_depth * 0.5)
+	var picker_depth: float = float(min(cell_size * 0.42, full_length * 0.28))
+	var picker_center: float = float(max(0.16, full_length * 0.5 - picker_depth * 0.5))
 	_add_picker(1, picker_center, picker_depth)
 	_add_picker(-1, -picker_center, picker_depth)
 
@@ -108,7 +110,7 @@ func _add_picker(sign: int, local_z: float, picker_depth: float) -> void:
 	area.position = Vector3(0, 0.34, local_z)
 	var shape_node := CollisionShape3D.new()
 	var shape := BoxShape3D.new()
-	shape.size = Vector3(1.00, 1.08, max(0.22, picker_depth))
+	shape.size = Vector3(1.00, 1.08, float(max(0.22, picker_depth)))
 	shape_node.shape = shape
 	area.add_child(shape_node)
 	picker_root.add_child(area)
@@ -120,26 +122,26 @@ func _orient_to_axis() -> void:
 
 func animate_to(world_position: Vector3, duration: float = 0.15) -> void:
 	busy = true
-	var rest_scale := Vector3(1.045, 1.045, 1.045) if selected else Vector3.ONE
-	var tween := create_tween()
+	var rest_scale: Vector3 = Vector3(1.045, 1.045, 1.045) if selected else Vector3.ONE
+	var tween: Tween = create_tween()
 	tween.tween_property(self, "position", world_position, duration).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	tween.parallel().tween_property(self, "scale", Vector3(1.08, 0.96, 1.08), duration * 0.55).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	tween.tween_property(self, "scale", rest_scale, duration * 0.45).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tween.tween_callback(_finish_move)
 
 func blocked_feedback(sign: int) -> void:
-	var start := position
+	var start: Vector3 = position
 	var local_direction := Vector3(0, 0, float(sign))
-	var world_direction := global_transform.basis * local_direction
-	var nudge := world_direction.normalized() * 0.055
-	var tween := create_tween()
+	var world_direction: Vector3 = global_transform.basis * local_direction
+	var nudge: Vector3 = world_direction.normalized() * 0.055
+	var tween: Tween = create_tween()
 	tween.tween_property(self, "position", start + nudge, 0.035)
 	tween.tween_property(self, "position", start - nudge, 0.045)
 	tween.tween_property(self, "position", start, 0.035)
 
 func animate_exit(world_direction: Vector3, distance: float) -> void:
 	busy = true
-	var tween := create_tween()
+	var tween: Tween = create_tween()
 	tween.tween_property(self, "position", position + world_direction.normalized() * distance, 0.48).set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_IN)
 	tween.parallel().tween_property(self, "scale", Vector3(0.18, 0.18, 0.18), 0.48).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	tween.tween_callback(_hide_after_exit)
