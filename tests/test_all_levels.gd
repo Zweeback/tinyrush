@@ -1,5 +1,7 @@
 extends SceneTree
 
+const CI_SOLVER_STATE_LIMIT := 10000
+
 func _init() -> void:
 	var catalog := ParkingPanicLevelCatalog.new()
 	var validator := ParkingPanicLevelValidator.new()
@@ -12,6 +14,7 @@ func _init() -> void:
 	for i in range(catalog.size()):
 		var level := catalog.load_level(i)
 		var level_id := str(level.get("id", "?"))
+		print("SOLVE: %s" % level_id)
 		var validation := validator.validate(level)
 		if not validation.is_empty():
 			printerr("FAIL: %s validation=%s" % [level_id, validation])
@@ -21,11 +24,15 @@ func _init() -> void:
 		var board := ParkingBoard.new()
 		board.configure(level)
 		var solver := ParkingPanicSolver.new()
-		var result := solver.solve(board)
+		var result := solver.solve(board, CI_SOLVER_STATE_LIMIT)
 		var expected := int(level.get("optimal_moves", -1))
 		var actual := int(result.get("moves", -1))
+		if bool(result.get("limit_reached", false)):
+			printerr("FAIL: %s exceeded CI solver state limit %d" % [level_id, CI_SOLVER_STATE_LIMIT])
+			failures += 1
+			continue
 		if not bool(result.get("solved", false)) or actual != expected:
-			printerr("FAIL: %s expected=%d actual=%d" % [level_id, expected, actual])
+			printerr("FAIL: %s expected=%d actual=%d states=%d" % [level_id, expected, actual, int(result.get("states_visited", 0))])
 			failures += 1
 			continue
 
