@@ -1,0 +1,39 @@
+name: Parking Panic CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  static-preflight:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run data, resource and scene-contract audits
+        run: python tools/run_checks.py
+
+  godot-headless:
+    runs-on: ubuntu-latest
+    env:
+      GODOT_VERSION: '4.3'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download official Godot editor
+        run: |
+          curl -L --fail -o godot.zip "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          unzip -q godot.zip
+          mv "Godot_v${GODOT_VERSION}-stable_linux.x86_64" godot
+          chmod +x godot
+      - name: Import project headlessly
+        run: ./godot --headless --path . --import
+      - name: Boot main scene for a short headless smoke test
+        run: ./godot --headless --path . --quit-after 5
+      - name: Verify all puzzle solutions
+        run: ./godot --headless --path . --script res://tests/test_all_levels.gd
+      - name: Verify level validator
+        run: ./godot --headless --path . --script res://tests/test_level_validator.gd
+      - name: Verify board rules
+        run: ./godot --headless --path . --script res://tests/test_board_rules.gd
