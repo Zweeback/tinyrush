@@ -7,6 +7,7 @@ on:
 jobs:
   static-preflight:
     runs-on: ubuntu-latest
+    timeout-minutes: 3
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -17,6 +18,7 @@ jobs:
 
   godot-headless:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     env:
       GODOT_VERSION: '4.3'
     steps:
@@ -28,12 +30,14 @@ jobs:
           mv "Godot_v${GODOT_VERSION}-stable_linux.x86_64" godot
           chmod +x godot
       - name: Import project headlessly
-        run: ./godot --headless --path . --import
+        run: timeout 45s ./godot --headless --path . --import
       - name: Boot main scene for a short headless smoke test
-        run: ./godot --headless --path . --quit-after 5
+        run: timeout 20s ./godot --headless --path . --quit-after 5
+      - name: Verify Paris solver baseline
+        run: timeout 45s ./godot --headless --path . --script res://tests/test_solver.gd
       - name: Verify all puzzle solutions
-        run: ./godot --headless --path . --script res://tests/test_all_levels.gd
+        run: timeout 60s ./godot --headless --path . --script res://tests/test_all_levels.gd
       - name: Verify level validator
-        run: ./godot --headless --path . --script res://tests/test_level_validator.gd
+        run: timeout 30s ./godot --headless --path . --script res://tests/test_level_validator.gd
       - name: Verify board rules
-        run: ./godot --headless --path . --script res://tests/test_board_rules.gd
+        run: timeout 30s ./godot --headless --path . --script res://tests/test_board_rules.gd
