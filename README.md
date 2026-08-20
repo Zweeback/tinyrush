@@ -2,7 +2,7 @@
 
 Tiny 3D traffic puzzle in Godot 4.3: one-cell sliding-car logic, rotatable landmark diorama worlds, deterministic puzzle data and a path toward cube-face driving.
 
-## Current playable slice — 0.5.0-alpha
+## Current playable slice — 0.5.1-alpha
 
 - Paris / Eiffel Tower Jam — optimal 9 cell moves
 - Cairo / Pyramid Gridlock — optimal 12 cell moves
@@ -46,13 +46,26 @@ That runs:
 With Godot 4.3 installed:
 
 ```bash
+godot --headless --path . --script res://tests/test_solver.gd
 godot --headless --path . --script res://tests/test_all_levels.gd
 godot --headless --path . --script res://tests/test_level_validator.gd
 godot --headless --path . --script res://tests/test_board_rules.gd
 ```
 
-GitHub Actions performs the static preflight, imports the project headlessly and runs the Godot test suite on every push/PR.
+GitHub Actions now verifies the project with the official Godot 4.3 editor on every push/PR: parser/compiler import gate, solver tests, level/board tests and a real GL Compatibility main-scene smoke test under Xvfb.
+
+## Verified CI baseline
+
+The audited 0.5.1 alpha passes:
+
+- dependency-free Python preflight
+- Godot 4.3 import with no script parser/compiler errors
+- Paris solver: 9 optimal moves / 683 visited states
+- Cairo solver: 12 optimal moves / 270 visited states
+- Tokyo solver: 12 optimal moves / 1171 visited states
+- level-validator and board-rule tests
+- graphical main-scene boot using the GL Compatibility renderer
 
 ## Status
 
-This is a testable alpha vertical slice, not a production build. The biggest remaining technical gates are a real Godot runtime/device smoke test, Android export automation, asset replacement for procedural placeholders and the signature multi-face/cube topology.
+This is a testable alpha vertical slice, not a production build. Native Godot parsing, puzzle execution and graphical boot are now CI-verified. The largest remaining release gate is a physical Android export/touch smoke test. Procedural visuals/audio are still prototype assets, and the signature multi-face/cube topology remains the next major gameplay milestone after mobile readiness.
