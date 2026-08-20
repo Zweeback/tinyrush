@@ -1,10 +1,10 @@
-; Parking Panic - audited playable world-tour build v0.5
+; Parking Panic - audited playable world-tour build v0.5.1
 config_version=5
 
 [application]
 config/name="Parking Panic"
 config/description="Tiny 3D parking puzzle across rotatable landmark diorama worlds."
-config/version="0.5.0-alpha"
+config/version="0.5.1-alpha"
 run/main_scene="res://scenes/main.tscn"
 config/features=PackedStringArray("4.3", "GL Compatibility")
 
