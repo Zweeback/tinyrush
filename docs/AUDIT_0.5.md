@@ -1,10 +1,10 @@
-# Parking Panic 0.5 Audit
+# Parking Panic 0.5 / 0.5.1 Audit
 
 Date: 2026-08-20
 
 ## Scope
 
-Static/source audit of the Godot project, puzzle data, input flow, model/solver boundary, scene contracts, world builder and CI definition. The local execution environment used for this audit does not contain a Godot binary, so native parser/render/device execution remains an external gate.
+Audit of the Godot project, puzzle data, input flow, model/solver boundary, scene contracts, world builder and CI. The first pass was static because the local container had no Godot binary. The repository now runs the official Godot 4.3 editor in GitHub Actions, including import, native GDScript tests and a GL Compatibility main-scene smoke test under Xvfb.
 
 ## Fixed in 0.5
 
@@ -20,31 +20,42 @@ Static/source audit of the Godot project, puzzle data, input flow, model/solver 
 | Medium | World island and dressing dimensions were hard-coded around a 6x6 board. | Dimensions now derive from board bounds and cell size. |
 | Medium | Tokyo's disjoint static cells caused the landmark to be placed at the average of unrelated blockers, visually occupying logical road cells. | Added explicit `landmark_cells`; landmark placement is separated from all static blockers. |
 | Medium | Scene `$Node/Path` contracts could break without a Godot run and go unnoticed by the Python preflight. | Added static scene/script contract audit. |
-| Low | Selection feedback was only scale-based and picker visibility code did not create a visible endcap cue. | Added an emissive selection marker and simplified deterministic picker behavior. |
-| Low | Project metadata/UI hints still described the older Paris-only/empty-space-drag behavior. | Updated version metadata, hints and responsive top/progress anchors. |
+| Low | Selection feedback was only scale-based. | Added an emissive selection marker and simplified deterministic picker behavior. |
 
-## Verified locally
+## Native-CI findings fixed in 0.5.1
 
-`python tools/run_checks.py` passes and currently proves:
+The first real Godot 4.3 run exposed several GDScript `Variant` inference warnings that were treated as parser errors. They were present in the input controller, board logic, FX math, procedural car view and world builder. These were invisible to the dependency-free Python checks. All affected boundaries now use explicit types/casts where Godot 4.3 cannot infer a stable type.
+
+The first headless main-scene smoke also produced repeated dummy-renderer `mesh_get_surface_count` errors. These were not game-script failures; they were caused by instantiating procedural 3D meshes against Godot's headless dummy rendering backend. The CI smoke was therefore redesigned instead of suppressing the messages: parser/solver tests remain headless, while the actual main scene boots with the GL Compatibility renderer under Xvfb.
+
+## Verified
+
+The dependency-free preflight passes and proves:
 
 - every indexed level exists and is structurally valid;
-- Paris optimal = 9 cell moves, 683 BFS states;
-- Cairo optimal = 12 cell moves, 270 BFS states;
-- Tokyo optimal = 12 cell moves, 1171 BFS states;
 - every declared `optimal_path` replays legally and exits on its final step;
 - all scanned `res://` references resolve;
-- scene-attached script `$Node/Path` references resolve for both scenes;
+- scene-attached script `$Node/Path` references resolve;
 - no duplicate `class_name` declarations are present.
+
+The official Godot 4.3 CI additionally passes:
+
+- project import with parser/compiler-error rejection;
+- Paris solver baseline: 9 optimal moves, 683 visited states, peak queue 144;
+- Cairo: 12 optimal moves, 270 visited states, peak queue 61;
+- Tokyo: 12 optimal moves, 1171 visited states, peak queue 180;
+- runtime level-validator tests;
+- board-rule replay tests;
+- main-scene boot using the GL Compatibility renderer under Xvfb.
 
 ## Remaining release blockers
 
-1. **Native Godot smoke test:** import/parse/run the project with Godot 4.3 and inspect runtime errors.
-2. **Physical input test:** verify mouse, single-touch, pinch and orbit behavior on at least one Android device.
-3. **Export test:** create and install an Android build; current repository only has a Web export preset.
-4. **Procedural presentation debt:** car meshes, city meshes, audio tones and burst particles remain prototype assets. Their boundaries are now replaceable, but they are not production assets.
-5. **Scale behavior:** runtime BFS is fine for current small levels, but should move to build-time verification/baked metadata before a large campaign.
-6. **Signature mechanic not implemented:** multi-face/cube topology is still a roadmap item and must be solved in the model/solver before visual edge wrapping.
+1. **Physical input test:** verify single-touch, pinch, orbit-from-car, fallback movement buttons and haptics on at least one Android device.
+2. **Android export test:** create, install and boot an APK. The current checked-in export preset is Web only.
+3. **Procedural presentation debt:** car meshes, city meshes, audio tones and burst particles remain prototype assets. Their architecture is replaceable, but they are not production assets.
+4. **Scale behavior:** runtime BFS is appropriate for the current tiny catalog but should move toward build-time verification/baked metadata before a large campaign.
+5. **Signature mechanic:** multi-face/cube topology is still intentionally unimplemented. It should enter the board model and solver before any visual edge-wrapping code.
 
 ## Release recommendation
 
-Treat `0.5.0-alpha` as the first audited test candidate. Do not add cube-face driving or large content batches until native Godot CI and one physical-device smoke test are green.
+`0.5.1-alpha` is the first alpha in this project that is both source-audited and actually imported, solved, tested and graphically booted by Godot 4.3 in CI. Merge it as the stable development baseline, then complete the Android physical-device gate before starting the cube-face topology milestone.
