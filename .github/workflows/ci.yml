@@ -16,9 +16,9 @@ jobs:
       - name: Run data, resource and scene-contract audits
         run: python tools/run_checks.py
 
-  godot-headless:
+  godot-runtime:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 6
     env:
       GODOT_VERSION: '4.3'
     steps:
@@ -29,10 +29,14 @@ jobs:
           unzip -q godot.zip
           mv "Godot_v${GODOT_VERSION}-stable_linux.x86_64" godot
           chmod +x godot
-      - name: Import project headlessly
-        run: timeout 45s ./godot --headless --path . --import
-      - name: Boot main scene for a short headless smoke test
-        run: timeout 20s ./godot --headless --path . --quit-after 5
+      - name: Import project and reject parser/compiler errors
+        run: |
+          set -o pipefail
+          timeout 45s ./godot --headless --path . --import 2>&1 | tee godot-import.log
+          if grep -E 'SCRIPT ERROR: (Parse Error|Compile Error)|ERROR: Failed to load script' godot-import.log; then
+            echo 'Godot import reported a script parser/compiler error.'
+            exit 1
+          fi
       - name: Verify Paris solver baseline
         run: timeout 45s ./godot --headless --path . --script res://tests/test_solver.gd
       - name: Verify all puzzle solutions
@@ -41,3 +45,11 @@ jobs:
         run: timeout 30s ./godot --headless --path . --script res://tests/test_level_validator.gd
       - name: Verify board rules
         run: timeout 30s ./godot --headless --path . --script res://tests/test_board_rules.gd
+      - name: Boot main scene with real GL compatibility renderer under Xvfb
+        run: |
+          set -o pipefail
+          xvfb-run -a timeout 30s ./godot --path . --rendering-method gl_compatibility --quit-after 5 2>&1 | tee godot-smoke.log
+          if grep -E 'SCRIPT ERROR:|ERROR: Failed to load script|Invalid call\.' godot-smoke.log; then
+            echo 'Godot graphical smoke test reported a script/runtime error.'
+            exit 1
+          fi
