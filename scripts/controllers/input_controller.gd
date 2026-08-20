@@ -104,7 +104,7 @@ func _handle_touch_drag(event: InputEventScreenDrag) -> void:
 		pinching = true
 		pending_hit.clear()
 		active_pointer = -999
-		var distance := _touch_distance()
+		var distance: float = _touch_distance()
 		if previous_pinch_distance > 0.0:
 			_set_zoom(camera_distance - (distance - previous_pinch_distance) * 0.012)
 		previous_pinch_distance = distance
@@ -144,8 +144,8 @@ func _pointer_release(pointer_id: int) -> void:
 	pending_hit.clear()
 
 func _emit_hit(hit: Dictionary) -> void:
-	var collider := hit.get("collider")
-	if not collider is Area3D or not collider.has_meta("car_id"):
+	var collider: Area3D = hit.get("collider") as Area3D
+	if collider == null or not collider.has_meta("car_id"):
 		return
 	var car_id := str(collider.get_meta("car_id"))
 	if collider.has_meta("move_sign"):
@@ -155,22 +155,22 @@ func _emit_hit(hit: Dictionary) -> void:
 
 func _raycast_picker(screen_pos: Vector2) -> Dictionary:
 	# Endcaps win over the large body picker, eliminating overlap ambiguity.
-	var endcap_hit := _raycast_layer(screen_pos, ENDCAP_LAYER)
+	var endcap_hit: Dictionary = _raycast_layer(screen_pos, ENDCAP_LAYER)
 	if not endcap_hit.is_empty():
 		return endcap_hit
 	return _raycast_layer(screen_pos, BODY_LAYER)
 
 func _raycast_layer(screen_pos: Vector2, layer_mask: int) -> Dictionary:
-	var ray_from := camera.project_ray_origin(screen_pos)
-	var ray_to := ray_from + camera.project_ray_normal(screen_pos) * 100.0
-	var query := PhysicsRayQueryParameters3D.create(ray_from, ray_to)
+	var ray_from: Vector3 = camera.project_ray_origin(screen_pos)
+	var ray_to: Vector3 = ray_from + camera.project_ray_normal(screen_pos) * 100.0
+	var query: PhysicsRayQueryParameters3D = PhysicsRayQueryParameters3D.create(ray_from, ray_to)
 	query.collide_with_areas = true
 	query.collide_with_bodies = false
 	query.collision_mask = layer_mask
 	return camera.get_world_3d().direct_space_state.intersect_ray(query)
 
 func _touch_distance() -> float:
-	var points := touch_points.values()
+	var points: Array = touch_points.values()
 	if points.size() < 2:
 		return 0.0
 	var a: Vector2 = points[0]
