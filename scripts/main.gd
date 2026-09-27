@@ -12,6 +12,8 @@ var car_views: Dictionary = {}
 var moves := 0
 var is_busy := false
 var level_cleared := false
+var juice_chain := 0
+var best_juice_chain := 0
 
 @onready var world_builder: ParkingPanicWorld = $WorldRoot/BoardRoot
 @onready var cars_root: Node3D = $WorldRoot/CarsRoot
@@ -85,6 +87,7 @@ func restart_level() -> void:
 	is_busy = false
 	level_cleared = false
 	moves = 0
+	juice_chain = 0
 	board.reset_from_level(level)
 
 	for child in cars_root.get_children():
@@ -134,6 +137,7 @@ func _try_arrow_move(car_id: String) -> void:
 	var local_sign := 1 if direction == axis else -1
 
 	if not _route_clear(car_id):
+		juice_chain = 0
 		view.blocked_feedback(local_sign)
 		audio.blocked_sound()
 		Input.vibrate_handheld(14)
@@ -145,18 +149,26 @@ func _try_arrow_move(car_id: String) -> void:
 
 	board.active[car_id] = false
 	moves += 1
+	juice_chain += 1
+	best_juice_chain = maxi(best_juice_chain, juice_chain)
 	is_busy = true
 	view.set_move_hints(false, false)
 
 	var world_direction := _face_direction_to_world(face, direction)
 	var normal := _face_basis(face).y
 
-	fx.burst(view.position + normal * 0.22, view.body_color, 7, 0.24)
+	var reward_color := _reward_color(juice_chain)
+	fx.burst(view.position + normal * 0.22, view.body_color, mini(16, 7 + juice_chain), 0.24 + minf(0.18, float(juice_chain) * 0.02))
+	fx.reward_pulse(view.position + normal * 0.12, reward_color, juice_chain)
+	if juice_chain in [3, 6, 9]:
+		fx.milestone_burst(view.position + normal * 0.16, reward_color, juice_chain / 3)
+		_reward_camera_punch(juice_chain)
 	audio.move_sound(moves)
-	Input.vibrate_handheld(7)
-	view.animate_exit(world_direction, cell_size * 9.0, 0.24)
+	Input.vibrate_handheld(7 + mini(12, juice_chain))
+	view.animate_exit(world_direction, cell_size * 9.0, maxf(0.16, 0.24 - float(juice_chain) * 0.006))
 
-	status_label.text = "%d LEFT" % board.remaining_count()
+	status_label.modulate = reward_color
+	status_label.text = "CHAIN x%d · %d LEFT" % [juice_chain, board.remaining_count()]
 	_update_ui()
 
 	await get_tree().create_timer(0.32).timeout
@@ -221,10 +233,14 @@ func _refresh_arrows() -> void:
 func _complete_level() -> void:
 	level_cleared = true
 	input_controller.set_enabled(false)
-	status_label.text = "CLEARED"
+	var clear_color := _reward_color(maxi(best_juice_chain, 9))
+	status_label.modulate = clear_color
+	status_label.text = "CLEARED · BEST CHAIN x%d" % best_juice_chain
 	hint_label.text = "ALL ARROWS OUT"
+	fx.milestone_burst(Vector3(0, 0.5, 0), clear_color, 4)
+	_reward_camera_punch(9)
 	audio.play_win_chime()
-	Input.vibrate_handheld(32)
+	Input.vibrate_handheld(38)
 	next_button.visible = true
 	next_button.text = "REPLAY ▶"
 	_update_ui()
@@ -345,8 +361,23 @@ func _validate_cube_level(data: Dictionary) -> Array[String]:
 
 func _update_ui() -> void:
 	move_label.text = "LEFT %02d" % board.remaining_count()
-	optimal_label.text = "ARROWS"
+	optimal_label.text = "CHAIN x%d" % juice_chain
 	restart_button.disabled = is_busy
+
+func _reward_color(chain: int) -> Color:
+	if chain >= 9:
+		return Color(1.0, 0.24, 0.70, 1)
+	if chain >= 6:
+		return Color(1.0, 0.76, 0.10, 1)
+	if chain >= 3:
+		return Color(0.42, 1.0, 0.18, 1)
+	return Color(0.10, 0.92, 1.0, 1)
+
+func _reward_camera_punch(chain: int) -> void:
+	var target_fov := BASE_CAMERA_FOV - minf(5.0, float(chain) * 0.35)
+	var tween := create_tween()
+	tween.tween_property(camera, "fov", target_fov, 0.07).set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_OUT)
+	tween.tween_property(camera, "fov", BASE_CAMERA_FOV, 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 func _fail_boot(message: String) -> void:
 	status_label.text = message
