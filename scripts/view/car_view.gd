@@ -198,15 +198,16 @@ func _build_move_arrows(full_length: float) -> void:
 func _build_chevron(parent: Node3D, sign: int, local_z: float, color: Color) -> void:
 	var arm_length := 0.34
 	var x_offset := 0.115
-	for row in range(3):
-		var row_z := local_z - float(sign) * float(row) * 0.18
+	for row in range(2):
+		var row_z := local_z - float(sign) * float(row) * 0.20
 		for side_value in [-1.0, 1.0]:
 			var side: float = float(side_value)
 			var arm := MeshInstance3D.new()
 			var mesh := BoxMesh.new()
 			mesh.size = Vector3(0.095, 0.045, arm_length)
 			arm.mesh = mesh
-			arm.position = Vector3(side * x_offset, 0.82 + float(row) * 0.006, row_z - float(sign) * 0.055)
+			var arrow_y := 0.84 if vehicle_type == "truck" else 0.70
+			arm.position = Vector3(side * x_offset, arrow_y + float(row) * 0.006, row_z - float(sign) * 0.055)
 			arm.rotation_degrees.y = side * float(sign) * 38.0
 			arm.material_override = _material(color, 3.4, 0.14, true)
 			parent.add_child(arm)
