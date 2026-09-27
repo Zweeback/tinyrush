@@ -33,10 +33,6 @@ func set_selected(value: bool) -> void:
 	selected = value
 	if selection_marker != null:
 		selection_marker.visible = selected or is_target
-		if is_target and not selected:
-			selection_marker.modulate = Color(1.0, 0.72, 0.12, 0.72)
-		else:
-			selection_marker.modulate = Color(1.0, 0.92, 0.42, 1.0)
 	var target_scale := Vector3(1.05, 1.05, 1.05) if selected else Vector3.ONE
 	var tween := create_tween()
 	tween.tween_property(self, "scale", target_scale, 0.09).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
