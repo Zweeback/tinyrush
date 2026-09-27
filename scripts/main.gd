@@ -21,6 +21,8 @@ var optimal_moves := -1
 var selected_car_id := ""
 var auto_path: Array = []
 var level_cleared := false
+var combo := 0
+var best_combo := 0
 
 @onready var world_builder: ParkingPanicWorld = $WorldRoot/BoardRoot
 @onready var cars_root: Node3D = $WorldRoot/CarsRoot
@@ -146,6 +148,7 @@ func restart_level() -> void:
 	is_busy = false
 	level_cleared = false
 	moves = 0
+	combo = 0
 	history.clear()
 	selected_car_id = ""
 	board.reset_from_level(level)
@@ -291,6 +294,7 @@ func _on_arrow_tap(car_id: String) -> void:
 	var result: Dictionary = board.apply_move(car_id, 1)
 
 	if not bool(result.get("ok", false)):
+		combo = 0
 		view.blocked_feedback(local_sign)
 		fx.burst(view.position + Vector3.UP * 0.42, Color(1.0, 0.28, 0.12, 1), 7, 0.30)
 		audio.blocked_sound()
@@ -302,15 +306,19 @@ func _on_arrow_tap(car_id: String) -> void:
 
 	history.append({"id": car_id, "arrow_escape": true})
 	moves += 1
+	combo += 1
+	best_combo = maxi(best_combo, combo)
 	is_busy = true
 	view.set_move_hints(false, false)
 	var world_direction := Vector3(float(escape_dir.x), 0, float(escape_dir.y))
-	fx.burst(view.position + Vector3.UP * 0.34, view.body_color, 10, 0.42)
+	var burst_count := mini(22, 9 + combo * 2)
+	fx.burst(view.position + Vector3.UP * 0.34, view.body_color, burst_count, 0.42 + minf(0.35, float(combo) * 0.035))
 	fx.camera_kick()
 	audio.move_sound(moves)
-	Input.vibrate_handheld(9)
-	view.animate_exit(world_direction, cell_size * 10.5)
-	status_label.text = "%s OUT · %d LEFT" % [car_id.to_upper(), board.remaining_count()]
+	Input.vibrate_handheld(7 + mini(18, combo * 2))
+	var exit_duration := maxf(0.14, 0.31 - float(combo - 1) * 0.018)
+	view.animate_exit(world_direction, cell_size * 10.5, exit_duration)
+	status_label.text = "COMBO x%d · %s OUT · %d LEFT" % [combo, car_id.to_upper(), board.remaining_count()]
 	_update_ui()
 
 	await get_tree().create_timer(0.50).timeout
@@ -326,8 +334,8 @@ func _complete_arrow_level() -> void:
 	level_cleared = true
 	input_controller.set_enabled(false)
 	selected_car_id = ""
-	status_label.text = "TRAFFIC CLEARED!"
-	hint_label.text = "DEPENDENCY CHAIN SOLVED · %d / %d" % [moves, optimal_moves]
+	status_label.text = "RUN CLEARED · COMBO x%d!" % best_combo
+	hint_label.text = "FAST CLEAR · %d VEHICLES · KEEP THE FLOW" % moves
 	fx.burst(Vector3.ZERO + Vector3.UP * 0.8, Color(0.24, 0.95, 1.0, 1), 34, 1.25)
 	Input.vibrate_handheld(42)
 	audio.play_win_chime()
@@ -413,8 +421,11 @@ func _auto_solve_arrow() -> void:
 			_fail_auto("ARROW AUTO PATH FAILED")
 			return
 		moves += 1
+		combo += 1
+		best_combo = maxi(best_combo, combo)
 		view.set_move_hints(false, false)
-		view.animate_exit(Vector3(float(escape_dir.x), 0, float(escape_dir.y)), cell_size * 10.5)
+		var exit_duration := maxf(0.14, 0.29 - float(combo - 1) * 0.016)
+		view.animate_exit(Vector3(float(escape_dir.x), 0, float(escape_dir.y)), cell_size * 10.5, exit_duration)
 		audio.move_sound(moves)
 		_update_ui()
 		await get_tree().create_timer(0.34).timeout
@@ -505,7 +516,7 @@ func _update_ui() -> void:
 				var id := str(id_value)
 				if board.is_active(id) and board.can_escape(id):
 					open_routes += 1
-		selected_label.text = "OPEN ROUTES: %d · LEFT: %d" % [open_routes, board.remaining_count()]
+		selected_label.text = "FLOW x%d · OPEN %d · LEFT %d" % [combo, open_routes, board.remaining_count()]
 		backward_button.visible = false
 		forward_button.visible = false
 	else:
