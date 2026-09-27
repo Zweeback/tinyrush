@@ -47,8 +47,8 @@ func _build_visuals() -> void:
 	var full_length := float(length_cells) * cell_size * 0.82
 	var body_width := 0.76
 	var body_height := 0.27
-	var cabin_length := min(0.96, full_length * 0.44)
-	var wheel_z := max(0.30, full_length * 0.34)
+	var cabin_length: float = minf(0.96, full_length * 0.44)
+	var wheel_z: float = maxf(0.30, full_length * 0.34)
 	var glass := Color(0.035, 0.18, 0.32, 1)
 	var tire := Color(0.022, 0.026, 0.034, 1)
 	var hub := Color(0.58, 0.63, 0.68, 1)
@@ -203,8 +203,8 @@ func _build_pickers() -> void:
 	body_area.add_child(body_shape_node)
 	picker_root.add_child(body_area)
 
-	var picker_depth := min(cell_size * 0.42, full_length * 0.28)
-	var picker_center := max(0.16, full_length * 0.50 - picker_depth * 0.50)
+	var picker_depth: float = minf(cell_size * 0.42, full_length * 0.28)
+	var picker_center: float = maxf(0.16, full_length * 0.50 - picker_depth * 0.50)
 	_add_picker(1, picker_center, picker_depth)
 	_add_picker(-1, -picker_center, picker_depth)
 
