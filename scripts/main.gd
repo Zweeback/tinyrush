@@ -1,7 +1,11 @@
 extends Node3D
 
 const CAR_SCENE := preload("res://scenes/tiny_car.tscn")
-const ARROW_LEVEL_PATH := "res://data/levels/arrow_city_01.json"
+const ARROW_LEVEL_PATHS := [
+	"res://data/levels/arrow_city_01.json",
+	"res://data/levels/arrow_city_02.json",
+	"res://data/levels/arrow_city_03.json"
+]
 
 @export var cell_size := 1.02
 
@@ -23,6 +27,9 @@ var auto_path: Array = []
 var level_cleared := false
 var combo := 0
 var best_combo := 0
+var score := 0
+var flow_remaining := 0.0
+var flow_window := 1.55
 
 @onready var world_builder: ParkingPanicWorld = $WorldRoot/BoardRoot
 @onready var cars_root: Node3D = $WorldRoot/CarsRoot
@@ -62,10 +69,12 @@ func _ready() -> void:
 	backward_button.pressed.connect(_move_selected.bind(-1))
 	forward_button.pressed.connect(_move_selected.bind(1))
 	next_button.pressed.connect(next_level)
-	_load_arrow_level()
+	_load_arrow_level_at(0)
 
-func _load_arrow_level() -> void:
-	var file := FileAccess.open(ARROW_LEVEL_PATH, FileAccess.READ)
+func _load_arrow_level_at(index: int) -> void:
+	level_cursor = posmod(index, ARROW_LEVEL_PATHS.size())
+	var path: String = ARROW_LEVEL_PATHS[level_cursor]
+	var file := FileAccess.open(path, FileAccess.READ)
 	if file == null:
 		_fail_boot("ARROW LEVEL LOAD ERROR")
 		return
@@ -75,7 +84,6 @@ func _load_arrow_level() -> void:
 		return
 	level = parsed
 	game_mode = "arrow_escape"
-	level_cursor = 0
 
 	var validation := arrow_validator.validate(level)
 	if not validation.is_empty():
@@ -99,7 +107,7 @@ func _load_arrow_level() -> void:
 	board_offset = _calculate_board_offset()
 	world_builder.build(level, cell_size)
 	_update_level_labels()
-	self_test_label.text = "ARROW LOGIC · SOLVER OK · %d VEHICLES · %d DEPENDENCIES" % [board.car_ids().size(), int(solved.get("states_visited", 0))]
+	self_test_label.text = "ARROW LOGIC · SOLVER OK · %d VEHICLES · %d STATES" % [board.car_ids().size(), int(solved.get("states_visited", 0))]
 	restart_level()
 
 func _load_level_at(index: int) -> void:
@@ -140,7 +148,12 @@ func next_level() -> void:
 	if is_busy:
 		return
 	if game_mode == "arrow_escape":
-		restart_level()
+		if level_cursor + 1 < ARROW_LEVEL_PATHS.size():
+			_load_arrow_level_at(level_cursor + 1)
+		else:
+			score = 0
+			best_combo = 0
+			_load_arrow_level_at(0)
 	else:
 		_load_level_at(level_cursor + 1)
 
@@ -149,6 +162,7 @@ func restart_level() -> void:
 	level_cleared = false
 	moves = 0
 	combo = 0
+	flow_remaining = 0.0
 	history.clear()
 	selected_car_id = ""
 	board.reset_from_level(level)
@@ -295,6 +309,8 @@ func _on_arrow_tap(car_id: String) -> void:
 
 	if not bool(result.get("ok", false)):
 		combo = 0
+		flow_remaining = 0.0
+		score = maxi(0, score - 25)
 		view.blocked_feedback(local_sign)
 		fx.burst(view.position + Vector3.UP * 0.42, Color(1.0, 0.28, 0.12, 1), 7, 0.30)
 		audio.blocked_sound()
@@ -308,6 +324,8 @@ func _on_arrow_tap(car_id: String) -> void:
 	moves += 1
 	combo += 1
 	best_combo = maxi(best_combo, combo)
+	flow_remaining = maxf(0.72, flow_window - float(combo - 1) * 0.045)
+	score += 100 + combo * 30
 	is_busy = true
 	view.set_move_hints(false, false)
 	var world_direction := Vector3(float(escape_dir.x), 0, float(escape_dir.y))
@@ -335,13 +353,14 @@ func _complete_arrow_level() -> void:
 	level_cleared = true
 	input_controller.set_enabled(false)
 	selected_car_id = ""
-	status_label.text = "RUN CLEARED · COMBO x%d!" % best_combo
+	score += 500 + best_combo * 50
+	status_label.text = "RUN CLEARED · COMBO x%d · %05d!" % [best_combo, score]
 	hint_label.text = "FAST CLEAR · %d VEHICLES · KEEP THE FLOW" % moves
 	fx.burst(Vector3.ZERO + Vector3.UP * 0.8, Color(0.24, 0.95, 1.0, 1), 34, 1.25)
 	Input.vibrate_handheld(42)
 	audio.play_win_chime()
 	next_button.visible = true
-	next_button.text = "REPLAY JAM ▶"
+	next_button.text = "NEXT RUN ▶" if level_cursor + 1 < ARROW_LEVEL_PATHS.size() else "RESTART RUN ▶"
 	_update_ui()
 
 func _complete_level(hero: ParkingPanicCarView, sign: int) -> void:
@@ -424,6 +443,8 @@ func _auto_solve_arrow() -> void:
 		moves += 1
 		combo += 1
 		best_combo = maxi(best_combo, combo)
+		flow_remaining = maxf(0.72, flow_window - float(combo - 1) * 0.045)
+		score += 100 + combo * 30
 		view.set_move_hints(false, false)
 		var auto_direction := Vector3(float(escape_dir.x), 0, float(escape_dir.y))
 		fx.speed_trail(view.position + Vector3.UP * 0.30, auto_direction, view.body_color, combo)
@@ -482,8 +503,8 @@ func _update_level_labels() -> void:
 	var title := str(level.get("title", "TRAFFIC JAM"))
 	title_label.text = "TINY RUSH · %s" % world
 	if game_mode == "arrow_escape":
-		world_name_label.text = "ARROW MODE · %s" % title
-		progress_label.text = "%d VEHICLES" % board.car_ids().size()
+		world_name_label.text = "ARROW RUN · %s" % title
+		progress_label.text = "RUN %d / %d" % [level_cursor + 1, ARROW_LEVEL_PATHS.size()]
 	else:
 		world_name_label.text = "WORLD %02d · %s · %s" % [level_cursor + 1, world, title]
 		progress_label.text = "%d / %d" % [level_cursor + 1, catalog.size()]
@@ -506,8 +527,12 @@ func _refresh_move_hints() -> void:
 		view.set_move_hints(can_backward, can_forward)
 
 func _update_ui() -> void:
-	move_label.text = "MOVES %02d" % moves
-	optimal_label.text = "CLEAR %02d" % optimal_moves if game_mode == "arrow_escape" else ("OPT %02d" % optimal_moves if optimal_moves >= 0 else "OPT --")
+	if game_mode == "arrow_escape":
+		move_label.text = "SCORE %05d" % score
+		optimal_label.text = "FLOW x%d" % combo
+	else:
+		move_label.text = "MOVES %02d" % moves
+		optimal_label.text = "OPT %02d" % optimal_moves if optimal_moves >= 0 else "OPT --"
 	undo_button.disabled = history.is_empty() or is_busy or level_cleared
 	auto_button.disabled = is_busy
 	restart_button.disabled = is_busy
@@ -529,3 +554,13 @@ func _update_ui() -> void:
 		var no_selection := selected_car_id.is_empty()
 		backward_button.disabled = no_selection or is_busy or level_cleared or not board.can_move(selected_car_id, -1)
 		forward_button.disabled = no_selection or is_busy or level_cleared or not board.can_move(selected_car_id, 1)
+
+func _process(delta: float) -> void:
+	if game_mode != "arrow_escape" or level_cleared or combo <= 0:
+		return
+	if is_busy:
+		return
+	flow_remaining = maxf(0.0, flow_remaining - delta)
+	if flow_remaining <= 0.0:
+		combo = 0
+		_update_ui()
