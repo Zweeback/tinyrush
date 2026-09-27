@@ -259,7 +259,7 @@ func _fail_boot(message: String) -> void:
 	status_label.text = message
 	hint_label.text = "Project started, but startup validation failed."
 	self_test_label.text = "SELF TEST · FAIL"
-	push_error("Parking Panic: %s" % message)
+	push_error("TinyRush: %s" % message)
 
 func _world_position(car_id: String) -> Vector3:
 	var spec := board.get_spec(car_id)
@@ -281,7 +281,7 @@ func _reset_status_later() -> void:
 func _update_level_labels() -> void:
 	var world := str(level.get("world", "WORLD"))
 	var title := str(level.get("title", "TRAFFIC JAM"))
-	title_label.text = "PARKING PANIC · %s" % world
+	title_label.text = "TINY RUSH · %s" % world
 	world_name_label.text = "WORLD %02d · %s · %s" % [level_cursor + 1, world, title]
 	progress_label.text = "%d / %d" % [level_cursor + 1, catalog.size()]
 
