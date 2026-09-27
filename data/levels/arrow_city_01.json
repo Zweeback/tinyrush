@@ -1,0 +1,270 @@
+{
+  "id": "arrow_city_01",
+  "mode": "arrow_escape",
+  "theme": "tokyo",
+  "world": "ARROW CITY",
+  "title": "TRAFFIC ESCAPE",
+  "landmark": "none",
+  "world_index": 1,
+  "level_index": 1,
+  "bounds": [
+    7,
+    7
+  ],
+  "static_cells": [],
+  "cars": [
+    {
+      "id": "hero",
+      "pos": [
+        2,
+        3
+      ],
+      "axis": [
+        1,
+        0
+      ],
+      "escape_dir": [
+        1,
+        0
+      ],
+      "len": 2,
+      "target": true,
+      "vehicle_type": "hero",
+      "color": [
+        1,
+        0.16,
+        0.22,
+        1
+      ]
+    },
+    {
+      "id": "blue",
+      "pos": [
+        5,
+        1
+      ],
+      "axis": [
+        0,
+        1
+      ],
+      "escape_dir": [
+        0,
+        -1
+      ],
+      "len": 3,
+      "target": false,
+      "vehicle_type": "truck",
+      "color": [
+        0.12,
+        0.6,
+        1,
+        1
+      ]
+    },
+    {
+      "id": "yellow",
+      "pos": [
+        4,
+        0
+      ],
+      "axis": [
+        1,
+        0
+      ],
+      "escape_dir": [
+        1,
+        0
+      ],
+      "len": 2,
+      "target": false,
+      "vehicle_type": "car",
+      "color": [
+        1,
+        0.73,
+        0.1,
+        1
+      ]
+    },
+    {
+      "id": "orange",
+      "pos": [
+        0,
+        5
+      ],
+      "axis": [
+        1,
+        0
+      ],
+      "escape_dir": [
+        1,
+        0
+      ],
+      "len": 3,
+      "target": false,
+      "vehicle_type": "truck",
+      "color": [
+        1,
+        0.45,
+        0.16,
+        1
+      ]
+    },
+    {
+      "id": "green",
+      "pos": [
+        4,
+        4
+      ],
+      "axis": [
+        0,
+        1
+      ],
+      "escape_dir": [
+        0,
+        -1
+      ],
+      "len": 2,
+      "target": false,
+      "vehicle_type": "car",
+      "color": [
+        0.18,
+        0.82,
+        0.36,
+        1
+      ]
+    },
+    {
+      "id": "violet",
+      "pos": [
+        2,
+        2
+      ],
+      "axis": [
+        1,
+        0
+      ],
+      "escape_dir": [
+        -1,
+        0
+      ],
+      "len": 3,
+      "target": false,
+      "vehicle_type": "truck",
+      "color": [
+        0.64,
+        0.35,
+        0.96,
+        1
+      ]
+    },
+    {
+      "id": "mint",
+      "pos": [
+        0,
+        1
+      ],
+      "axis": [
+        0,
+        1
+      ],
+      "escape_dir": [
+        0,
+        -1
+      ],
+      "len": 2,
+      "target": false,
+      "vehicle_type": "car",
+      "color": [
+        0.2,
+        0.9,
+        0.7,
+        1
+      ]
+    },
+    {
+      "id": "pink",
+      "pos": [
+        1,
+        6
+      ],
+      "axis": [
+        1,
+        0
+      ],
+      "escape_dir": [
+        -1,
+        0
+      ],
+      "len": 2,
+      "target": false,
+      "vehicle_type": "car",
+      "color": [
+        1,
+        0.36,
+        0.66,
+        1
+      ]
+    },
+    {
+      "id": "cyan",
+      "pos": [
+        6,
+        3
+      ],
+      "axis": [
+        0,
+        1
+      ],
+      "escape_dir": [
+        0,
+        1
+      ],
+      "len": 3,
+      "target": false,
+      "vehicle_type": "truck",
+      "color": [
+        0.15,
+        0.85,
+        0.9,
+        1
+      ]
+    },
+    {
+      "id": "lime",
+      "pos": [
+        1,
+        4
+      ],
+      "axis": [
+        1,
+        0
+      ],
+      "escape_dir": [
+        -1,
+        0
+      ],
+      "len": 2,
+      "target": false,
+      "vehicle_type": "car",
+      "color": [
+        0.55,
+        0.9,
+        0.16,
+        1
+      ]
+    }
+  ],
+  "optimal_moves": 10,
+  "optimal_path": [
+    "yellow",
+    "blue",
+    "mint",
+    "violet",
+    "green",
+    "orange",
+    "pink",
+    "cyan",
+    "lime",
+    "hero"
+  ]
+}
