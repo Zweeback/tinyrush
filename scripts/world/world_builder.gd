@@ -47,37 +47,21 @@ func clear() -> void:
 		child.free()
 
 func _palette() -> Dictionary:
-	match theme:
-		"cairo":
-			return {
-				"road": Color(0.105, 0.115, 0.13, 1),
-				"frame": Color(0.22, 0.24, 0.27, 1),
-				"line": Color(0.95, 0.91, 0.80, 0.92),
-				"accent": Color(1.0, 0.62, 0.12, 1),
-				"ground": Color(0.68, 0.53, 0.30, 1)
-			}
-		"tokyo":
-			return {
-				"road": Color(0.075, 0.09, 0.13, 1),
-				"frame": Color(0.18, 0.22, 0.28, 1),
-				"line": Color(0.76, 0.90, 1.0, 0.94),
-				"accent": Color(0.28, 0.92, 1.0, 1),
-				"ground": Color(0.20, 0.42, 0.48, 1)
-			}
-		_:
-			return {
-				"road": Color(0.105, 0.115, 0.13, 1),
-				"frame": Color(0.22, 0.24, 0.27, 1),
-				"line": Color(0.96, 0.96, 0.93, 0.92),
-				"accent": Color(0.18, 0.80, 1.0, 1),
-				"ground": Color(0.30, 0.66, 0.43, 1)
-			}
+	return {
+		"road": Color(0.075, 0.095, 0.20, 1),
+		"frame": Color(0.32, 0.17, 0.58, 1),
+		"line": Color(0.95, 0.97, 1.0, 0.94),
+		"accent": Color(0.10, 0.92, 1.0, 1),
+		"accent2": Color(1.0, 0.30, 0.68, 1),
+		"accent3": Color(1.0, 0.72, 0.12, 1),
+		"ground": Color(0.16, 0.72, 0.58, 1)
+	}
 
 func _build_cube_body() -> void:
 	var p: Dictionary = _palette()
 	var core_size := Vector3(cube_width + 0.58, cube_height, cube_depth + 0.58)
 	var core_pos := Vector3(0, -cube_height * 0.5 - 0.22, 0)
-	_add_box(core_size, core_pos, Color(0.075, 0.085, 0.10, 1), 0.0, 0.48)
+	_add_box(core_size, core_pos, Color(0.075, 0.055, 0.16, 1), 0.0, 0.52)
 
 	# Top lip and toy-like raised frame.
 	_add_box(
@@ -87,6 +71,11 @@ func _build_cube_body() -> void:
 		0.0,
 		0.38
 	)
+
+	# Arcade-runner color bands: fast visual read from a distance.
+	_add_box(Vector3(cube_width * 0.72, 0.055, 0.085), Vector3(0, 0.045, -cube_depth * 0.5 + 0.19), p["accent"] as Color, 1.9, 0.24)
+	_add_box(Vector3(cube_width * 0.52, 0.055, 0.085), Vector3(0, 0.047, cube_depth * 0.5 - 0.19), p["accent2"] as Color, 1.7, 0.24)
+	_add_box(Vector3(0.085, 0.055, cube_depth * 0.34), Vector3(-cube_width * 0.5 + 0.19, 0.049, 0), p["accent3"] as Color, 1.5, 0.24)
 
 	# Bright edge rails make the object read as one large physical puzzle cube.
 	for sx_value in [-1.0, 1.0]:
@@ -100,16 +89,16 @@ func _build_cube_body() -> void:
 					-cube_height * 0.5 - 0.22,
 					sz * (cube_depth * 0.5 + 0.26)
 				),
-				Color(0.40, 0.42, 0.45, 1),
+				Color(0.77, 0.57, 1.0, 1),
 				0.0,
 				0.32
 			)
 
 	var rail_y := -0.08
-	_add_box(Vector3(cube_width + 0.42, 0.14, 0.15), Vector3(0, rail_y, cube_depth * 0.5 + 0.26), Color(0.43, 0.45, 0.48, 1), 0.0, 0.32)
-	_add_box(Vector3(cube_width + 0.42, 0.14, 0.15), Vector3(0, rail_y, -cube_depth * 0.5 - 0.26), Color(0.43, 0.45, 0.48, 1), 0.0, 0.32)
-	_add_box(Vector3(0.15, 0.14, cube_depth + 0.42), Vector3(cube_width * 0.5 + 0.26, rail_y, 0), Color(0.43, 0.45, 0.48, 1), 0.0, 0.32)
-	_add_box(Vector3(0.15, 0.14, cube_depth + 0.42), Vector3(-cube_width * 0.5 - 0.26, rail_y, 0), Color(0.43, 0.45, 0.48, 1), 0.0, 0.32)
+	_add_box(Vector3(cube_width + 0.42, 0.14, 0.15), Vector3(0, rail_y, cube_depth * 0.5 + 0.26), Color(0.54, 0.30, 0.88, 1), 0.0, 0.32)
+	_add_box(Vector3(cube_width + 0.42, 0.14, 0.15), Vector3(0, rail_y, -cube_depth * 0.5 - 0.26), Color(0.54, 0.30, 0.88, 1), 0.0, 0.32)
+	_add_box(Vector3(0.15, 0.14, cube_depth + 0.42), Vector3(cube_width * 0.5 + 0.26, rail_y, 0), Color(0.54, 0.30, 0.88, 1), 0.0, 0.32)
+	_add_box(Vector3(0.15, 0.14, cube_depth + 0.42), Vector3(-cube_width * 0.5 - 0.26, rail_y, 0), Color(0.54, 0.30, 0.88, 1), 0.0, 0.32)
 
 func _build_top_roads() -> void:
 	var p: Dictionary = _palette()
@@ -147,7 +136,7 @@ func _build_top_roads() -> void:
 	for x_index in range(bounds.x):
 		for y_index in range(bounds.y):
 			var cell_pos := board_offset + Vector3(float(x_index) * cell_size, 0.020, float(y_index) * cell_size)
-			var slot_color := (p["road"] as Color).lightened(0.035 if (x_index + y_index) % 2 == 0 else 0.018)
+			var slot_color := (p["road"] as Color).lightened(0.12 if (x_index + y_index) % 2 == 0 else 0.055)
 			_add_box(
 				Vector3(cell_size * 0.90, 0.018, cell_size * 0.90),
 				cell_pos,
@@ -336,12 +325,12 @@ func _build_city_dressing() -> void:
 	)
 
 	var colors: Array[Color] = [
-		Color(0.95, 0.34, 0.24, 1),
-		Color(0.22, 0.56, 0.92, 1),
-		Color(0.98, 0.72, 0.22, 1),
-		Color(0.38, 0.76, 0.46, 1),
-		Color(0.68, 0.38, 0.86, 1),
-		Color(0.96, 0.46, 0.68, 1)
+		Color(1.00, 0.28, 0.20, 1),
+		Color(0.08, 0.64, 1.00, 1),
+		Color(1.00, 0.76, 0.10, 1),
+		Color(0.20, 0.86, 0.42, 1),
+		Color(0.65, 0.30, 1.00, 1),
+		Color(1.00, 0.30, 0.72, 1)
 	]
 
 	var radius: float = maxf(cube_width, cube_depth) * 0.5 + 2.3
@@ -360,7 +349,7 @@ func _build_city_dressing() -> void:
 		var ring: float = radius - 0.85 + float(i % 2) * 0.42
 		var tree_pos := Vector3(cos(angle) * ring, base_y + 0.40, sin(angle) * ring)
 		_add_box(Vector3(0.10, 0.46, 0.10), tree_pos, Color(0.34, 0.20, 0.10, 1), 0.0, 0.88)
-		_add_sphere(0.30, tree_pos + Vector3(0, 0.36, 0), Color(0.30, 0.72, 0.28, 1))
+		_add_sphere(0.30, tree_pos + Vector3(0, 0.36, 0), Color(0.18, 0.86, 0.40, 1))
 
 func _build_exit_gate(exit_data: Dictionary) -> void:
 	var row := int(exit_data.get("row", 2))
