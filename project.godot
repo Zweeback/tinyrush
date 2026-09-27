@@ -1,9 +1,9 @@
-; Parking Panic - audited playable world-tour build v0.5.1
+; TinyRush - traffic-cube visual prototype
 config_version=5
 
 [application]
-config/name="Parking Panic"
-config/description="Tiny 3D parking puzzle across rotatable landmark diorama worlds."
+config/name="TinyRush"
+config/description="Toy-scale 3D traffic puzzle built around a rotatable multi-face road cube."
 config/version="0.5.1-alpha"
 run/main_scene="res://scenes/main.tscn"
 config/features=PackedStringArray("4.3", "GL Compatibility")

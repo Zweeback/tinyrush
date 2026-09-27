@@ -1,0 +1,332 @@
+{
+  "id": "cube_arrows_01",
+  "mode": "cube_arrow",
+  "theme": "tokyo",
+  "world": "TINYRUSH CUBE",
+  "title": "PARKING PANIC INVERTED",
+  "landmark": "none",
+  "world_index": 1,
+  "level_index": 1,
+  "bounds": [
+    7,
+    7
+  ],
+  "static_cells": [],
+  "cars": [
+    {
+      "id": "top_blue",
+      "face": "top",
+      "pos": [
+        5,
+        2
+      ],
+      "axis": [
+        0,
+        1
+      ],
+      "escape_dir": [
+        0,
+        -1
+      ],
+      "len": 2,
+      "target": false,
+      "vehicle_type": "car",
+      "color": [
+        0.1,
+        0.58,
+        1,
+        1
+      ]
+    },
+    {
+      "id": "top_red",
+      "face": "top",
+      "pos": [
+        2,
+        3
+      ],
+      "axis": [
+        1,
+        0
+      ],
+      "escape_dir": [
+        1,
+        0
+      ],
+      "len": 2,
+      "target": true,
+      "vehicle_type": "hero",
+      "color": [
+        1,
+        0.16,
+        0.22,
+        1
+      ]
+    },
+    {
+      "id": "top_orange",
+      "face": "top",
+      "pos": [
+        0,
+        5
+      ],
+      "axis": [
+        1,
+        0
+      ],
+      "escape_dir": [
+        -1,
+        0
+      ],
+      "len": 2,
+      "target": false,
+      "vehicle_type": "car",
+      "color": [
+        1,
+        0.48,
+        0.08,
+        1
+      ]
+    },
+    {
+      "id": "top_green",
+      "face": "top",
+      "pos": [
+        1,
+        2
+      ],
+      "axis": [
+        0,
+        1
+      ],
+      "escape_dir": [
+        0,
+        1
+      ],
+      "len": 3,
+      "target": false,
+      "vehicle_type": "truck",
+      "color": [
+        0.3,
+        0.88,
+        0.18,
+        1
+      ]
+    },
+    {
+      "id": "front_yellow",
+      "face": "front",
+      "pos": [
+        5,
+        1
+      ],
+      "axis": [
+        0,
+        1
+      ],
+      "escape_dir": [
+        0,
+        -1
+      ],
+      "len": 2,
+      "target": false,
+      "vehicle_type": "car",
+      "color": [
+        1,
+        0.78,
+        0.1,
+        1
+      ]
+    },
+    {
+      "id": "front_purple",
+      "face": "front",
+      "pos": [
+        1,
+        2
+      ],
+      "axis": [
+        1,
+        0
+      ],
+      "escape_dir": [
+        1,
+        0
+      ],
+      "len": 3,
+      "target": false,
+      "vehicle_type": "truck",
+      "color": [
+        0.62,
+        0.3,
+        0.96,
+        1
+      ]
+    },
+    {
+      "id": "front_pink",
+      "face": "front",
+      "pos": [
+        3,
+        6
+      ],
+      "axis": [
+        1,
+        0
+      ],
+      "escape_dir": [
+        1,
+        0
+      ],
+      "len": 2,
+      "target": false,
+      "vehicle_type": "car",
+      "color": [
+        1,
+        0.28,
+        0.68,
+        1
+      ]
+    },
+    {
+      "id": "front_cyan",
+      "face": "front",
+      "pos": [
+        3,
+        4
+      ],
+      "axis": [
+        0,
+        1
+      ],
+      "escape_dir": [
+        0,
+        1
+      ],
+      "len": 2,
+      "target": false,
+      "vehicle_type": "car",
+      "color": [
+        0.08,
+        0.86,
+        0.92,
+        1
+      ]
+    },
+    {
+      "id": "right_white",
+      "face": "right",
+      "pos": [
+        5,
+        2
+      ],
+      "axis": [
+        0,
+        1
+      ],
+      "escape_dir": [
+        0,
+        -1
+      ],
+      "len": 2,
+      "target": false,
+      "vehicle_type": "car",
+      "color": [
+        0.92,
+        0.94,
+        0.98,
+        1
+      ]
+    },
+    {
+      "id": "right_blue",
+      "face": "right",
+      "pos": [
+        3,
+        3
+      ],
+      "axis": [
+        1,
+        0
+      ],
+      "escape_dir": [
+        1,
+        0
+      ],
+      "len": 2,
+      "target": false,
+      "vehicle_type": "car",
+      "color": [
+        0.12,
+        0.46,
+        1,
+        1
+      ]
+    },
+    {
+      "id": "right_lime",
+      "face": "right",
+      "pos": [
+        1,
+        5
+      ],
+      "axis": [
+        1,
+        0
+      ],
+      "escape_dir": [
+        -1,
+        0
+      ],
+      "len": 2,
+      "target": false,
+      "vehicle_type": "car",
+      "color": [
+        0.52,
+        0.94,
+        0.16,
+        1
+      ]
+    },
+    {
+      "id": "right_orange",
+      "face": "right",
+      "pos": [
+        2,
+        1
+      ],
+      "axis": [
+        0,
+        1
+      ],
+      "escape_dir": [
+        0,
+        1
+      ],
+      "len": 3,
+      "target": false,
+      "vehicle_type": "truck",
+      "color": [
+        1,
+        0.4,
+        0.08,
+        1
+      ]
+    }
+  ],
+  "optimal_moves": 12,
+  "optimal_path": [
+    "top_blue",
+    "top_red",
+    "top_orange",
+    "top_green",
+    "front_yellow",
+    "front_purple",
+    "front_pink",
+    "front_cyan",
+    "right_white",
+    "right_blue",
+    "right_lime",
+    "right_orange"
+  ]
+}

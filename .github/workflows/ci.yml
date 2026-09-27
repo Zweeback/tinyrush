@@ -45,6 +45,8 @@ jobs:
         run: timeout 30s ./godot --headless --path . --script res://tests/test_level_validator.gd
       - name: Verify board rules
         run: timeout 30s ./godot --headless --path . --script res://tests/test_board_rules.gd
+      - name: Verify arrow-run stages
+        run: timeout 45s ./godot --headless --path . --script res://tests/test_arrow_levels.gd
       - name: Boot main scene with real GL compatibility renderer under Xvfb
         run: |
           set -o pipefail
@@ -53,3 +55,12 @@ jobs:
             echo 'Godot graphical smoke test reported a script/runtime error.'
             exit 1
           fi
+
+      - name: Capture TinyRush screenshot
+        run: xvfb-run -a timeout 30s ./godot --path . --rendering-method gl_compatibility --script res://tools/capture_screenshot.gd
+      - name: Upload TinyRush screenshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: tinyrush-original-screenie
+          path: artifacts/tinyrush-current.png
+          if-no-files-found: error

@@ -7,6 +7,9 @@ var axis := Vector2i(1, 0)
 var length_cells := 2
 var is_target := false
 var color := Color(0.2, 0.65, 1.0, 1.0)
+var vehicle_type := "car"
+var escape_dir := Vector2i.ZERO
+var face := "top"
 
 static func from_dictionary(data: Dictionary) -> ParkingCarState:
 	var car := ParkingCarState.new()
@@ -16,6 +19,17 @@ static func from_dictionary(data: Dictionary) -> ParkingCarState:
 	car.length_cells = int(data.get("len", 2))
 	car.is_target = bool(data.get("target", false))
 	car.color = _color(data.get("color", [0.2, 0.65, 1.0, 1.0]))
+	car.escape_dir = _vec2i(data.get("escape_dir", [0, 0]))
+	car.face = str(data.get("face", "top")).to_lower()
+	var declared_type := str(data.get("vehicle_type", "")).to_lower()
+	if declared_type in ["hero", "car", "truck"]:
+		car.vehicle_type = declared_type
+	elif car.is_target:
+		car.vehicle_type = "hero"
+	elif car.length_cells >= 3:
+		car.vehicle_type = "truck"
+	else:
+		car.vehicle_type = "car"
 	return car
 
 func occupied_cells(at_pos: Variant = null) -> Array[Vector2i]:
@@ -33,6 +47,9 @@ func to_view_spec() -> Dictionary:
 		"axis": axis,
 		"len": length_cells,
 		"target": is_target,
+		"vehicle_type": vehicle_type,
+		"escape_dir": escape_dir,
+		"face": face,
 		"color": [color.r, color.g, color.b, color.a]
 	}
 
