@@ -59,7 +59,7 @@ func validate(level: Dictionary) -> Array[String]:
 		var pos := _to_vec2i(car.get("pos", []))
 		var length_cells := int(car.get("len", 0))
 		var vehicle_type := str(car.get("vehicle_type", "")).to_lower()
-		if not vehicle_type.is_empty() and vehicle_type not in ["compact", "van", "truck"]:
+		if not vehicle_type.is_empty() and vehicle_type not in ["hero", "car", "truck"]:
 			errors.append("%s has invalid vehicle_type %s" % [car_id, vehicle_type])
 		if axis not in VALID_AXES:
 			errors.append("%s has invalid axis %s" % [car_id, axis])
