@@ -45,6 +45,8 @@ jobs:
         run: timeout 30s ./godot --headless --path . --script res://tests/test_level_validator.gd
       - name: Verify board rules
         run: timeout 30s ./godot --headless --path . --script res://tests/test_board_rules.gd
+      - name: Verify arrow-run stages
+        run: timeout 45s ./godot --headless --path . --script res://tests/test_arrow_levels.gd
       - name: Boot main scene with real GL compatibility renderer under Xvfb
         run: |
           set -o pipefail
