@@ -233,16 +233,17 @@ func _build_side_traffic() -> void:
 		Color(1.0, 0.20, 0.67, 1),
 		Color(0.10, 0.84, 0.92, 1)
 	]
-	var face_h := cube_height - 0.50
+	var face_h: float = cube_height - 0.50
+	var lane_count: int = maxi(1, bounds.y)
 
 	for i in range(7):
-		var lane := i % max(1, bounds.y)
-		var y := -0.58 - float(lane) * face_h / float(max(1, bounds.y))
+		var lane: int = i % lane_count
+		var y := -0.58 - float(lane) * face_h / float(lane_count)
 		var u := -cube_width * 0.34 + float((i * 2) % 7) * cube_width * 0.11
 		_build_wall_car("front", u, y, colors[i % colors.size()], i % 3 == 0, i % 2 == 1)
 
 	for i in range(6):
-		var lane := (i + 1) % max(1, bounds.y)
+		var lane: int = (i + 1) % lane_count
 		var y := -0.62 - float(lane) * face_h / float(max(1, bounds.y))
 		var u := -cube_depth * 0.33 + float((i * 3) % 6) * cube_depth * 0.13
 		_build_wall_car("right", u, y, colors[(i + 2) % colors.size()], i % 2 == 0, i % 3 == 0)
@@ -332,10 +333,10 @@ func _build_city_dressing() -> void:
 		Color(0.96, 0.46, 0.68, 1)
 	]
 
-	var radius := max(cube_width, cube_depth) * 0.5 + 2.3
+	var radius: float = maxf(cube_width, cube_depth) * 0.5 + 2.3
 	for i in range(18):
 		var angle := TAU * float(i) / 18.0
-		var ring := radius + float(i % 3) * 0.55
+		var ring: float = radius + float(i % 3) * 0.55
 		var h := 0.90 + float(i % 5) * 0.34
 		var w := 0.55 + float(i % 2) * 0.22
 		var d := 0.55 + float((i + 1) % 2) * 0.18
@@ -345,7 +346,7 @@ func _build_city_dressing() -> void:
 
 	for i in range(12):
 		var angle := TAU * (float(i) + 0.5) / 12.0
-		var ring := radius - 0.85 + float(i % 2) * 0.42
+		var ring: float = radius - 0.85 + float(i % 2) * 0.42
 		var tree_pos := Vector3(cos(angle) * ring, base_y + 0.40, sin(angle) * ring)
 		_add_box(Vector3(0.10, 0.46, 0.10), tree_pos, Color(0.34, 0.20, 0.10, 1), 0.0, 0.88)
 		_add_sphere(0.30, tree_pos + Vector3(0, 0.36, 0), Color(0.30, 0.72, 0.28, 1))
