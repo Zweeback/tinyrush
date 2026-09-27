@@ -83,6 +83,35 @@ func combo_camera_kick(power: int) -> void:
 	tween.tween_property(orbit_rig, "position", base - Vector3(amount * 0.55, amount * 0.35, 0), 0.036)
 	tween.tween_property(orbit_rig, "position", base, 0.055)
 
+func reward_pulse(origin: Vector3, color: Color, tier: int = 1) -> void:
+	if fx_root == null:
+		return
+	var ring_count := mini(3, 1 + tier / 3)
+	for ring_index in range(ring_count):
+		var ring := MeshInstance3D.new()
+		var mesh := CylinderMesh.new()
+		mesh.top_radius = 0.34 + float(ring_index) * 0.08
+		mesh.bottom_radius = mesh.top_radius
+		mesh.height = 0.022
+		mesh.radial_segments = 32
+		ring.mesh = mesh
+		ring.position = origin
+		ring.scale = Vector3(0.25, 0.25, 0.25)
+		ring.material_override = _material(color, 2.4, 0.16)
+		fx_root.add_child(ring)
+		var tween := create_tween()
+		if ring_index > 0:
+			tween.tween_interval(float(ring_index) * 0.045)
+		tween.tween_property(ring, "scale", Vector3(1.2 + float(tier) * 0.08, 0.22, 1.2 + float(tier) * 0.08), 0.18).set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_OUT)
+		tween.tween_property(ring, "scale", Vector3(1.55 + float(tier) * 0.10, 0.05, 1.55 + float(tier) * 0.10), 0.10)
+		tween.tween_callback(ring.queue_free)
+
+func milestone_burst(origin: Vector3, color: Color, tier: int) -> void:
+	if fx_root == null:
+		return
+	burst(origin, color, mini(26, 8 + tier * 3), 0.34 + float(tier) * 0.06)
+	impact_star(origin, color, mini(10, 2 + tier))
+
 func camera_kick() -> void:
 	if orbit_rig == null:
 		return
