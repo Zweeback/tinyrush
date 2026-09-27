@@ -117,6 +117,7 @@ func restart_level() -> void:
 	input_controller.set_enabled(true)
 	input_controller.reset_camera()
 	next_button.visible = false
+	_refresh_move_hints()
 	_update_ui()
 
 func undo_move() -> void:
@@ -137,6 +138,7 @@ func undo_move() -> void:
 	_update_ui()
 	await get_tree().create_timer(0.13).timeout
 	is_busy = false
+	_refresh_move_hints()
 	_update_ui()
 
 func _move_selected(sign: int) -> void:
@@ -155,6 +157,7 @@ func _select_car(car_id: String) -> void:
 		var view: ParkingPanicCarView = car_views[id]
 		view.set_selected(id == selected_car_id)
 	status_label.text = "%s SELECTED" % selected_car_id.to_upper()
+	_refresh_move_hints()
 	_update_ui()
 
 func _on_move_requested(car_id: String, sign: int) -> void:
@@ -179,6 +182,7 @@ func _on_move_requested(car_id: String, sign: int) -> void:
 	history.append({"id": car_id, "from": result.get("from", Vector2i.ZERO)})
 	moves += 1
 	is_busy = true
+	_refresh_move_hints()
 	view.animate_to(_world_position(car_id), 0.14)
 	fx.burst(view.position + Vector3.UP * 0.30, view.body_color, 7, 0.34)
 	fx.camera_kick()
@@ -187,6 +191,7 @@ func _on_move_requested(car_id: String, sign: int) -> void:
 	_update_ui()
 	await get_tree().create_timer(0.15).timeout
 	is_busy = false
+	_refresh_move_hints()
 	_update_ui()
 
 func _complete_level(hero: ParkingPanicCarView, sign: int) -> void:
@@ -194,6 +199,10 @@ func _complete_level(hero: ParkingPanicCarView, sign: int) -> void:
 	level_cleared = true
 	input_controller.set_enabled(false)
 	moves += 1
+	for id_value in car_views.keys():
+		var id := str(id_value)
+		var parked_view: ParkingPanicCarView = car_views[id]
+		parked_view.set_move_hints(false, false)
 	_update_ui()
 	status_label.text = "%s CLEARED!" % str(level.get("world", "WORLD"))
 	hint_label.text = "PERFECT CLEAR" if moves == optimal_moves else "CLEAR · OPTIMAL IS %d" % optimal_moves
@@ -232,6 +241,7 @@ func _start_auto_solve() -> void:
 			_complete_level(view, sign)
 			return
 		moves += 1
+		_refresh_move_hints()
 		view.animate_to(_world_position(car_id), 0.18)
 		fx.burst(view.position + Vector3.UP * 0.30, view.body_color, 6, 0.30)
 		audio.move_sound(moves)
@@ -285,12 +295,24 @@ func _update_level_labels() -> void:
 	world_name_label.text = "WORLD %02d · %s · %s" % [level_cursor + 1, world, title]
 	progress_label.text = "%d / %d" % [level_cursor + 1, catalog.size()]
 
+func _refresh_move_hints() -> void:
+	for id_value in car_views.keys():
+		var id := str(id_value)
+		var view: ParkingPanicCarView = car_views[id]
+		var can_backward := false
+		var can_forward := false
+		if not level_cleared:
+			can_backward = board.can_move(id, -1)
+			can_forward = board.can_move(id, 1)
+		view.set_move_hints(can_backward, can_forward)
+
 func _update_ui() -> void:
 	move_label.text = "MOVES %02d" % moves
 	optimal_label.text = "OPT %02d" % optimal_moves if optimal_moves >= 0 else "OPT --"
 	selected_label.text = "SELECTED: NONE" if selected_car_id.is_empty() else "SELECTED: %s" % selected_car_id.to_upper()
 	undo_button.disabled = history.is_empty() or is_busy or level_cleared
 	auto_button.disabled = is_busy
-	backward_button.disabled = selected_car_id.is_empty() or is_busy or level_cleared
-	forward_button.disabled = selected_car_id.is_empty() or is_busy or level_cleared
+	var no_selection := selected_car_id.is_empty()
+	backward_button.disabled = no_selection or is_busy or level_cleared or not board.can_move(selected_car_id, -1)
+	forward_button.disabled = no_selection or is_busy or level_cleared or not board.can_move(selected_car_id, 1)
 	restart_button.disabled = is_busy
