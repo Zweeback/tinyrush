@@ -56,15 +56,24 @@ func set_move_hints(can_backward: bool, can_forward: bool) -> void:
 	if forward_hint_root != null:
 		forward_hint_root.visible = can_forward
 
-func set_arrow_escape_state(can_escape: bool) -> void:
+func set_arrow_escape_state(can_escape: bool, combo_level: int = 0) -> void:
 	if backward_hint_root == null or forward_hint_root == null:
 		return
 	var sign := _local_escape_sign()
 	backward_hint_root.visible = sign < 0
 	forward_hint_root.visible = sign > 0
-	var color := Color(0.08, 1.0, 0.86, 0.98) if can_escape else Color(1.0, 0.25, 0.10, 0.96)
+	var color := _flow_arrow_color(combo_level) if can_escape else Color(1.0, 0.25, 0.10, 0.96)
 	var root := forward_hint_root if sign > 0 else backward_hint_root
 	_recolor_hint(root, color)
+
+func _flow_arrow_color(combo_level: int) -> Color:
+	if combo_level >= 10:
+		return Color(1.0, 0.20, 0.72, 0.99)
+	if combo_level >= 7:
+		return Color(1.0, 0.76, 0.08, 0.99)
+	if combo_level >= 4:
+		return Color(0.48, 1.0, 0.12, 0.99)
+	return Color(0.08, 1.0, 0.86, 0.98)
 
 func _local_escape_sign() -> int:
 	if escape_dir == -axis:
@@ -191,9 +200,30 @@ func _build_move_arrows(full_length: float) -> void:
 	visual_root.add_child(backward_hint_root)
 	visual_root.add_child(forward_hint_root)
 
-	var hint_color := Color(0.24, 0.95, 1.0, 0.90)
-	_build_chevron(backward_hint_root, -1, -full_length * 0.50 - 0.18, hint_color)
-	_build_chevron(forward_hint_root, 1, full_length * 0.50 + 0.18, hint_color)
+	var hint_color := Color(0.08, 1.0, 0.86, 0.98)
+	if arrow_mode:
+		_build_roof_arrow(backward_hint_root, -1, full_length, hint_color)
+		_build_roof_arrow(forward_hint_root, 1, full_length, hint_color)
+	else:
+		_build_chevron(backward_hint_root, -1, -full_length * 0.50 - 0.18, hint_color)
+		_build_chevron(forward_hint_root, 1, full_length * 0.50 + 0.18, hint_color)
+
+func _build_roof_arrow(parent: Node3D, sign: int, full_length: float, color: Color) -> void:
+	var row_count := 3 if length_cells >= 3 else 2
+	var arrow_y := 1.06 if vehicle_type == "truck" else 0.73
+	var spacing := minf(0.34, full_length / float(row_count + 2))
+	for row in range(row_count):
+		var row_center := (float(row) - float(row_count - 1) * 0.5) * spacing
+		for side_value in [-1.0, 1.0]:
+			var side := float(side_value)
+			var arm := MeshInstance3D.new()
+			var mesh := BoxMesh.new()
+			mesh.size = Vector3(0.13, 0.055, 0.42)
+			arm.mesh = mesh
+			arm.position = Vector3(side * 0.15, arrow_y + float(row) * 0.004, row_center + float(sign) * 0.05)
+			arm.rotation_degrees.y = side * float(sign) * 41.0
+			arm.material_override = _material(color, 4.2, 0.10, true)
+			parent.add_child(arm)
 
 func _build_chevron(parent: Node3D, sign: int, local_z: float, color: Color) -> void:
 	var arm_length := 0.34
@@ -255,6 +285,21 @@ func _orient_to_axis() -> void:
 	rotation = Vector3.ZERO
 	if axis.x != 0:
 		rotation_degrees.y = 90.0
+
+func animate_spawn(delay: float = 0.0) -> void:
+	busy = true
+	var rest_position := position
+	var rest_scale := scale
+	position = rest_position + Vector3(0, 1.25, 0)
+	scale = Vector3(0.36, 0.36, 0.36)
+	visual_root.rotation.y -= PI * 0.45
+	var tween := create_tween()
+	if delay > 0.0:
+		tween.tween_interval(delay)
+	tween.tween_property(self, "position", rest_position, 0.24).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tween.parallel().tween_property(self, "scale", rest_scale, 0.22).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tween.parallel().tween_property(visual_root, "rotation:y", 0.0, 0.24).set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_OUT)
+	tween.tween_callback(_finish_move)
 
 func animate_to(world_position: Vector3, duration: float = 0.15) -> void:
 	busy = true
