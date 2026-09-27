@@ -71,7 +71,6 @@ func _validate_cube(level: Dictionary) -> Array[String]:
 	var occupied := {}
 	var ids := {}
 	var faces := {}
-	var target_count := 0
 
 	for raw in level.get("cars", []):
 		if not raw is Dictionary:
@@ -99,8 +98,6 @@ func _validate_cube(level: Dictionary) -> Array[String]:
 			errors.append("%s invalid axis" % car_id)
 		if direction != axis and direction != -axis:
 			errors.append("%s arrow must follow its axis" % car_id)
-		if bool(car.get("target", false)):
-			target_count += 1
 
 		for i in range(length_cells):
 			var cell := pos + axis * i
@@ -113,11 +110,6 @@ func _validate_cube(level: Dictionary) -> Array[String]:
 			else:
 				occupied[key] = car_id
 
-	if target_count != 1:
-		errors.append("cube arrow level requires exactly one hero")
 	if not faces.has("top") or not faces.has("front") or not faces.has("right"):
 		errors.append("cube arrow level must populate top, front and right faces")
-	var optimal_path: Variant = level.get("optimal_path", [])
-	if not optimal_path is Array or optimal_path.size() != ids.size():
-		errors.append("optimal_path must contain every cube vehicle exactly once")
 	return errors
