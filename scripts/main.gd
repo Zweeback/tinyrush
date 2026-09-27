@@ -313,6 +313,7 @@ func _on_arrow_tap(car_id: String) -> void:
 	var world_direction := Vector3(float(escape_dir.x), 0, float(escape_dir.y))
 	var burst_count := mini(22, 9 + combo * 2)
 	fx.burst(view.position + Vector3.UP * 0.34, view.body_color, burst_count, 0.42 + minf(0.35, float(combo) * 0.035))
+	fx.speed_trail(view.position + Vector3.UP * 0.30, world_direction, view.body_color, combo)
 	fx.camera_kick()
 	audio.move_sound(moves)
 	Input.vibrate_handheld(7 + mini(18, combo * 2))
@@ -424,8 +425,10 @@ func _auto_solve_arrow() -> void:
 		combo += 1
 		best_combo = maxi(best_combo, combo)
 		view.set_move_hints(false, false)
+		var auto_direction := Vector3(float(escape_dir.x), 0, float(escape_dir.y))
+		fx.speed_trail(view.position + Vector3.UP * 0.30, auto_direction, view.body_color, combo)
 		var exit_duration := maxf(0.14, 0.29 - float(combo - 1) * 0.016)
-		view.animate_exit(Vector3(float(escape_dir.x), 0, float(escape_dir.y)), cell_size * 10.5, exit_duration)
+		view.animate_exit(auto_direction, cell_size * 10.5, exit_duration)
 		audio.move_sound(moves)
 		_update_ui()
 		await get_tree().create_timer(0.34).timeout
