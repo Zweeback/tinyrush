@@ -32,71 +32,179 @@ func configure(spec: Dictionary, size: float) -> void:
 func set_selected(value: bool) -> void:
 	selected = value
 	if selection_marker != null:
-		selection_marker.visible = selected
-	var target_scale: Vector3 = Vector3(1.045, 1.045, 1.045) if selected else Vector3.ONE
-	var tween: Tween = create_tween()
+		selection_marker.visible = selected or is_target
+		if is_target and not selected:
+			selection_marker.modulate = Color(1.0, 0.72, 0.12, 0.72)
+		else:
+			selection_marker.modulate = Color(1.0, 0.92, 0.42, 1.0)
+	var target_scale := Vector3(1.05, 1.05, 1.05) if selected else Vector3.ONE
+	var tween := create_tween()
 	tween.tween_property(self, "scale", target_scale, 0.09).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 
 func _build_visuals() -> void:
 	_clear_children(visual_root)
-	var full_length: float = float(length_cells) * cell_size * 0.84
-	_box(Vector3(0.78, 0.30, full_length), Vector3(0, 0.20, 0), body_color, 0.06)
-	_box(Vector3(0.58, 0.28, float(min(0.86, full_length * 0.44))), Vector3(0, 0.47, -full_length * 0.03), body_color.lightened(0.14), 0.03)
-	_box(Vector3(0.48, 0.17, 0.05), Vector3(0, 0.50, float(min(0.42, full_length * 0.23))), Color(0.04, 0.10, 0.16, 1), 0.04)
-	_box(Vector3(0.48, 0.16, 0.05), Vector3(0, 0.47, -float(min(0.42, full_length * 0.23))), Color(0.04, 0.10, 0.16, 1), 0.02)
 
-	var wheel_z: float = float(max(0.28, full_length * 0.33))
+	var full_length := float(length_cells) * cell_size * 0.82
+	var body_width := 0.76
+	var body_height := 0.27
+	var cabin_length := min(0.96, full_length * 0.44)
+	var wheel_z := max(0.30, full_length * 0.34)
+	var glass := Color(0.035, 0.18, 0.32, 1)
+	var tire := Color(0.022, 0.026, 0.034, 1)
+	var hub := Color(0.58, 0.63, 0.68, 1)
+
+	# Low, chunky toy-car silhouette.
+	_box(
+		Vector3(body_width, body_height, full_length),
+		Vector3(0, 0.22, 0),
+		body_color,
+		0.05,
+		0.30
+	)
+	_box(
+		Vector3(body_width * 0.88, 0.10, full_length * 0.88),
+		Vector3(0, 0.36, 0),
+		body_color.lightened(0.04),
+		0.03,
+		0.28
+	)
+	_box(
+		Vector3(0.56, 0.29, cabin_length),
+		Vector3(0, 0.50, -full_length * 0.03),
+		body_color.lightened(0.12),
+		0.03,
+		0.26
+	)
+
+	# Front and rear glass.
+	_box(
+		Vector3(0.46, 0.18, 0.045),
+		Vector3(0, 0.52, cabin_length * 0.50 - full_length * 0.03),
+		glass,
+		0.10,
+		0.18
+	)
+	_box(
+		Vector3(0.46, 0.16, 0.045),
+		Vector3(0, 0.50, -cabin_length * 0.50 - full_length * 0.03),
+		glass.darkened(0.04),
+		0.08,
+		0.18
+	)
+
+	# Side glass: two glossy slabs on each side give a much more toy-like readable cabin.
+	for side_value in [-1.0, 1.0]:
+		var side := float(side_value)
+		_box(
+			Vector3(0.032, 0.15, cabin_length * 0.55),
+			Vector3(side * 0.292, 0.50, -full_length * 0.03),
+			glass,
+			0.08,
+			0.18
+		)
+
+	# Bumpers.
+	_box(
+		Vector3(0.63, 0.09, 0.07),
+		Vector3(0, 0.19, full_length * 0.50 + 0.025),
+		Color(0.72, 0.74, 0.76, 1),
+		0.0,
+		0.28
+	)
+	_box(
+		Vector3(0.63, 0.09, 0.07),
+		Vector3(0, 0.19, -full_length * 0.50 - 0.025),
+		Color(0.56, 0.58, 0.61, 1),
+		0.0,
+		0.32
+	)
+
+	# Wheels and hubs.
 	for side_value in [-1.0, 1.0]:
 		var side := float(side_value)
 		for z_value in [-wheel_z, wheel_z]:
 			var z_pos := float(z_value)
 			var wheel := MeshInstance3D.new()
 			var cylinder := CylinderMesh.new()
-			cylinder.top_radius = 0.15
-			cylinder.bottom_radius = 0.15
-			cylinder.height = 0.13
-			cylinder.radial_segments = 12
+			cylinder.top_radius = 0.155
+			cylinder.bottom_radius = 0.155
+			cylinder.height = 0.135
+			cylinder.radial_segments = 14
 			wheel.mesh = cylinder
 			wheel.rotation_degrees = Vector3(0, 0, 90)
-			wheel.position = Vector3(side * 0.44, 0.02, z_pos)
-			wheel.material_override = _material(Color(0.025, 0.03, 0.04, 1), 0.0, 0.78)
+			wheel.position = Vector3(side * 0.43, 0.08, z_pos)
+			wheel.material_override = _material(tire, 0.0, 0.82)
 			visual_root.add_child(wheel)
 
+			var wheel_hub := MeshInstance3D.new()
+			var hub_mesh := CylinderMesh.new()
+			hub_mesh.top_radius = 0.075
+			hub_mesh.bottom_radius = 0.075
+			hub_mesh.height = 0.142
+			hub_mesh.radial_segments = 12
+			wheel_hub.mesh = hub_mesh
+			wheel_hub.rotation_degrees = Vector3(0, 0, 90)
+			wheel_hub.position = Vector3(side * 0.432, 0.08, z_pos)
+			wheel_hub.material_override = _material(hub, 0.0, 0.30)
+			visual_root.add_child(wheel_hub)
+
+	# Lights.
 	for x_value in [-0.22, 0.22]:
 		var x_pos := float(x_value)
-		_box(Vector3(0.13, 0.09, 0.045), Vector3(x_pos, 0.22, full_length * 0.5 + 0.02), Color(1.0, 0.90, 0.56, 1), 2.0)
-		_box(Vector3(0.12, 0.09, 0.045), Vector3(x_pos, 0.22, -full_length * 0.5 - 0.02), Color(1.0, 0.10, 0.22, 1), 1.7)
+		_box(
+			Vector3(0.13, 0.09, 0.045),
+			Vector3(x_pos, 0.23, full_length * 0.50 + 0.06),
+			Color(1.0, 0.90, 0.54, 1),
+			2.2,
+			0.18
+		)
+		_box(
+			Vector3(0.12, 0.08, 0.045),
+			Vector3(x_pos, 0.22, -full_length * 0.50 - 0.06),
+			Color(1.0, 0.10, 0.18, 1),
+			1.8,
+			0.18
+		)
 
+	# Glowing parking-pad selection marker; the target keeps a warm halo even before selection.
 	selection_marker = MeshInstance3D.new()
 	var marker_mesh := BoxMesh.new()
-	marker_mesh.size = Vector3(0.92, 0.035, full_length + 0.12)
+	marker_mesh.size = Vector3(0.94, 0.028, full_length + 0.14)
 	selection_marker.mesh = marker_mesh
-	selection_marker.position = Vector3(0, 0.015, 0)
-	selection_marker.material_override = _material(Color(1.0, 0.82, 0.20, 0.82), 1.8, 0.30, true)
-	selection_marker.visible = false
+	selection_marker.position = Vector3(0, 0.012, 0)
+	selection_marker.material_override = _material(Color(1.0, 0.74, 0.12, 0.82), 2.2, 0.22, true)
+	selection_marker.visible = is_target
 	visual_root.add_child(selection_marker)
 
 	if is_target:
-		_box(Vector3(0.34, 0.08, 0.34), Vector3(0, 0.69, 0), Color(1.0, 0.76, 0.18, 1), 2.6)
+		_box(
+			Vector3(0.26, 0.055, 0.26),
+			Vector3(0, 0.68, 0),
+			Color(1.0, 0.77, 0.16, 1),
+			2.5,
+			0.22
+		)
 
 func _build_pickers() -> void:
 	_clear_children(picker_root)
-	var full_length: float = float(length_cells) * cell_size * 0.84
+	var full_length := float(length_cells) * cell_size * 0.82
+
 	var body_area := Area3D.new()
 	body_area.collision_layer = BODY_LAYER
 	body_area.collision_mask = 0
 	body_area.input_ray_pickable = true
 	body_area.set_meta("car_id", car_id)
-	body_area.position = Vector3(0, 0.30, 0)
+	body_area.position = Vector3(0, 0.32, 0)
+
 	var body_shape_node := CollisionShape3D.new()
 	var body_shape := BoxShape3D.new()
-	body_shape.size = Vector3(0.96, 1.00, float(max(0.72, full_length * 0.72)))
+	body_shape.size = Vector3(0.98, 1.02, max(0.72, full_length * 0.74))
 	body_shape_node.shape = body_shape
 	body_area.add_child(body_shape_node)
 	picker_root.add_child(body_area)
 
-	var picker_depth: float = float(min(cell_size * 0.42, full_length * 0.28))
-	var picker_center: float = float(max(0.16, full_length * 0.5 - picker_depth * 0.5))
+	var picker_depth := min(cell_size * 0.42, full_length * 0.28)
+	var picker_center := max(0.16, full_length * 0.50 - picker_depth * 0.50)
 	_add_picker(1, picker_center, picker_depth)
 	_add_picker(-1, -picker_center, picker_depth)
 
@@ -108,9 +216,10 @@ func _add_picker(sign: int, local_z: float, picker_depth: float) -> void:
 	area.set_meta("car_id", car_id)
 	area.set_meta("move_sign", sign)
 	area.position = Vector3(0, 0.34, local_z)
+
 	var shape_node := CollisionShape3D.new()
 	var shape := BoxShape3D.new()
-	shape.size = Vector3(1.00, 1.08, float(max(0.22, picker_depth)))
+	shape.size = Vector3(1.0, 1.08, max(0.22, picker_depth))
 	shape_node.shape = shape
 	area.add_child(shape_node)
 	picker_root.add_child(area)
@@ -122,26 +231,26 @@ func _orient_to_axis() -> void:
 
 func animate_to(world_position: Vector3, duration: float = 0.15) -> void:
 	busy = true
-	var rest_scale: Vector3 = Vector3(1.045, 1.045, 1.045) if selected else Vector3.ONE
-	var tween: Tween = create_tween()
+	var rest_scale := Vector3(1.05, 1.05, 1.05) if selected else Vector3.ONE
+	var tween := create_tween()
 	tween.tween_property(self, "position", world_position, duration).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	tween.parallel().tween_property(self, "scale", Vector3(1.08, 0.96, 1.08), duration * 0.55).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 	tween.tween_property(self, "scale", rest_scale, duration * 0.45).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tween.tween_callback(_finish_move)
 
 func blocked_feedback(sign: int) -> void:
-	var start: Vector3 = position
+	var start := position
 	var local_direction := Vector3(0, 0, float(sign))
-	var world_direction: Vector3 = global_transform.basis * local_direction
-	var nudge: Vector3 = world_direction.normalized() * 0.055
-	var tween: Tween = create_tween()
+	var world_direction := global_transform.basis * local_direction
+	var nudge := world_direction.normalized() * 0.055
+	var tween := create_tween()
 	tween.tween_property(self, "position", start + nudge, 0.035)
 	tween.tween_property(self, "position", start - nudge, 0.045)
 	tween.tween_property(self, "position", start, 0.035)
 
 func animate_exit(world_direction: Vector3, distance: float) -> void:
 	busy = true
-	var tween: Tween = create_tween()
+	var tween := create_tween()
 	tween.tween_property(self, "position", position + world_direction.normalized() * distance, 0.48).set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_IN)
 	tween.parallel().tween_property(self, "scale", Vector3(0.18, 0.18, 0.18), 0.48).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	tween.tween_callback(_hide_after_exit)
@@ -157,21 +266,33 @@ func _clear_children(node: Node) -> void:
 	for child in node.get_children():
 		child.free()
 
-func _box(box_size: Vector3, local_pos: Vector3, color: Color, emission: float = 0.0) -> MeshInstance3D:
+func _box(
+	box_size: Vector3,
+	local_pos: Vector3,
+	color: Color,
+	emission: float = 0.0,
+	roughness: float = 0.30,
+	transparent: bool = false
+) -> MeshInstance3D:
 	var item := MeshInstance3D.new()
 	var mesh := BoxMesh.new()
 	mesh.size = box_size
 	item.mesh = mesh
 	item.position = local_pos
-	item.material_override = _material(color, emission)
+	item.material_override = _material(color, emission, roughness, transparent)
 	visual_root.add_child(item)
 	return item
 
-func _material(color: Color, emission_strength: float = 0.0, roughness: float = 0.38, transparent: bool = false) -> StandardMaterial3D:
+func _material(
+	color: Color,
+	emission_strength: float = 0.0,
+	roughness: float = 0.30,
+	transparent: bool = false
+) -> StandardMaterial3D:
 	var mat := StandardMaterial3D.new()
 	mat.albedo_color = color
 	mat.roughness = roughness
-	mat.metallic = 0.05
+	mat.metallic = 0.04
 	if transparent:
 		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	if emission_strength > 0.0:
