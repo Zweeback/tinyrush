@@ -3,7 +3,7 @@
   "mode": "cube_arrow",
   "theme": "tokyo",
   "world": "TINYRUSH CUBE",
-  "title": "PARKING PANIC INVERTED",
+  "title": "ARROWS",
   "landmark": "none",
   "world_index": 1,
   "level_index": 1,
@@ -54,8 +54,8 @@
         0
       ],
       "len": 2,
-      "target": true,
-      "vehicle_type": "hero",
+      "target": false,
+      "vehicle_type": "car",
       "color": [
         1,
         0.16,
@@ -313,20 +313,5 @@
         1
       ]
     }
-  ],
-  "optimal_moves": 12,
-  "optimal_path": [
-    "top_blue",
-    "top_red",
-    "top_orange",
-    "top_green",
-    "front_yellow",
-    "front_purple",
-    "front_pink",
-    "front_cyan",
-    "right_white",
-    "right_blue",
-    "right_lime",
-    "right_orange"
   ]
 }
