@@ -7,7 +7,7 @@ Example level fields:
 ```json
 {
   "landmark": "eiffel",
-  "landmark_scene": "res://assets/studio/paris/eiffel.glb",
+  "landmark_scene": "Godot resource path to assets/studio/paris/eiffel.glb",
   "landmark_scale": 0.42,
   "landmark_yaw_degrees": 90.0,
   "landmark_offset": [0.0, 0.0, 0.0]
