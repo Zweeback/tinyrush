@@ -29,6 +29,28 @@ func burst(origin: Vector3, color: Color, count: int, radius: float) -> void:
 		tween.parallel().tween_property(bit, "scale", Vector3.ZERO, 0.28)
 		tween.tween_callback(bit.queue_free)
 
+func speed_trail(origin: Vector3, direction: Vector3, color: Color, strength: int = 1) -> void:
+	if fx_root == null:
+		return
+	var dir := direction.normalized()
+	var side := Vector3(-dir.z, 0.0, dir.x)
+	var streak_count := mini(12, 4 + strength * 2)
+	for i in range(streak_count):
+		var streak := MeshInstance3D.new()
+		var mesh := BoxMesh.new()
+		mesh.size = Vector3(0.055, 0.028, 0.44 + float(i % 3) * 0.16)
+		streak.mesh = mesh
+		var lateral := (float(i % 5) - 2.0) * 0.10
+		streak.position = origin - dir * (0.22 + float(i) * 0.055) + side * lateral + Vector3.UP * (0.13 + float(i % 2) * 0.05)
+		streak.rotation.y = atan2(dir.x, dir.z)
+		streak.material_override = _material(color.lightened(float(i % 3) * 0.08), 2.0, 0.22)
+		fx_root.add_child(streak)
+		var tween := create_tween()
+		tween.tween_property(streak, "position", streak.position - dir * (0.70 + float(strength) * 0.10), 0.18).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		tween.parallel().tween_property(streak, "scale", Vector3(0.25, 0.25, 1.8), 0.18)
+		tween.tween_property(streak, "scale", Vector3.ZERO, 0.10)
+		tween.tween_callback(streak.queue_free)
+
 func camera_kick() -> void:
 	if orbit_rig == null:
 		return
