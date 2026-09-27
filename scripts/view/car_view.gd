@@ -62,7 +62,7 @@ func set_arrow_escape_state(can_escape: bool) -> void:
 	var sign := _local_escape_sign()
 	backward_hint_root.visible = sign < 0
 	forward_hint_root.visible = sign > 0
-	var color := Color(0.20, 0.96, 1.0, 0.96) if can_escape else Color(1.0, 0.34, 0.12, 0.94)
+	var color := Color(0.08, 1.0, 0.86, 0.98) if can_escape else Color(1.0, 0.25, 0.10, 0.96)
 	var root := forward_hint_root if sign > 0 else backward_hint_root
 	_recolor_hint(root, color)
 
@@ -88,9 +88,9 @@ func _build_visuals() -> void:
 	_build_move_arrows(full_length)
 
 func _build_compact(full_length: float) -> void:
-	var glass := Color(0.035, 0.18, 0.32, 1)
-	_box(Vector3(0.76, 0.25, full_length), Vector3(0, 0.22, 0), body_color, 0.04, 0.30)
-	_box(Vector3(0.66, 0.10, full_length * 0.82), Vector3(0, 0.35, 0), body_color.lightened(0.05), 0.02, 0.27)
+	var glass := Color(0.08, 0.78, 1.0, 1)
+	_box(Vector3(0.82, 0.29, full_length), Vector3(0, 0.22, 0), body_color, 0.04, 0.30)
+	_box(Vector3(0.72, 0.12, full_length * 0.84), Vector3(0, 0.35, 0), body_color.lightened(0.05), 0.02, 0.27)
 	var cabin_length: float = minf(0.90, full_length * 0.46)
 	_box(Vector3(0.55, 0.27, cabin_length), Vector3(0, 0.49, -full_length * 0.04), body_color.lightened(0.13), 0.02, 0.25)
 	_box(Vector3(0.45, 0.16, 0.04), Vector3(0, 0.51, cabin_length * 0.50 - full_length * 0.04), glass, 0.08, 0.18)
@@ -111,17 +111,17 @@ func _build_van(full_length: float) -> void:
 		_box(Vector3(0.035, 0.14, full_length * 0.18), Vector3(side * 0.36, 0.58, -full_length * 0.16), glass.darkened(0.03), 0.04, 0.22)
 
 func _build_truck(full_length: float) -> void:
-	var glass := Color(0.035, 0.18, 0.31, 1)
+	var glass := Color(0.08, 0.74, 1.0, 1)
 	var cab_length: float = minf(cell_size * 0.82, full_length * 0.36)
 	var cargo_length: float = maxf(cell_size * 1.15, full_length - cab_length - 0.12)
 	var cab_z: float = full_length * 0.50 - cab_length * 0.50
 	var cargo_z: float = -full_length * 0.50 + cargo_length * 0.50
 
-	_box(Vector3(0.80, 0.33, cab_length), Vector3(0, 0.26, cab_z), body_color.lightened(0.04), 0.03, 0.31)
+	_box(Vector3(0.86, 0.36, cab_length), Vector3(0, 0.26, cab_z), body_color.lightened(0.04), 0.03, 0.31)
 	_box(Vector3(0.68, 0.28, cab_length * 0.60), Vector3(0, 0.57, cab_z - cab_length * 0.08), body_color.lightened(0.12), 0.02, 0.28)
 	_box(Vector3(0.52, 0.17, 0.04), Vector3(0, 0.59, cab_z + cab_length * 0.31), glass, 0.08, 0.18)
 
-	_box(Vector3(0.84, 0.62, cargo_length), Vector3(0, 0.44, cargo_z), body_color.darkened(0.04), 0.02, 0.42)
+	_box(Vector3(0.90, 0.66, cargo_length), Vector3(0, 0.44, cargo_z), body_color.darkened(0.04), 0.02, 0.42)
 	for rib in [-0.30, 0.0, 0.30]:
 		_box(Vector3(0.87, 0.035, cargo_length * 0.92), Vector3(0, 0.44 + float(rib), cargo_z), body_color.lightened(0.05), 0.0, 0.40)
 
@@ -153,7 +153,7 @@ func _build_common_details(full_length: float) -> void:
 	marker_mesh.size = Vector3(0.96, 0.028, full_length + 0.16)
 	selection_marker.mesh = marker_mesh
 	selection_marker.position = Vector3(0, 0.012, 0)
-	selection_marker.material_override = _material(Color(1.0, 0.74, 0.12, 0.80), 2.0, 0.22, true)
+	selection_marker.material_override = _material(Color(1.0, 0.35, 0.78, 0.88), 2.8, 0.18, true)
 	selection_marker.visible = is_target
 	visual_root.add_child(selection_marker)
 
@@ -196,18 +196,20 @@ func _build_move_arrows(full_length: float) -> void:
 	_build_chevron(forward_hint_root, 1, full_length * 0.50 + 0.18, hint_color)
 
 func _build_chevron(parent: Node3D, sign: int, local_z: float, color: Color) -> void:
-	var arm_length := 0.30
-	var x_offset := 0.105
-	for side_value in [-1.0, 1.0]:
-		var side: float = float(side_value)
-		var arm := MeshInstance3D.new()
-		var mesh := BoxMesh.new()
-		mesh.size = Vector3(0.075, 0.035, arm_length)
-		arm.mesh = mesh
-		arm.position = Vector3(side * x_offset, 0.77, local_z - float(sign) * 0.055)
-		arm.rotation_degrees.y = side * float(sign) * 38.0
-		arm.material_override = _material(color, 2.8, 0.18, true)
-		parent.add_child(arm)
+	var arm_length := 0.34
+	var x_offset := 0.115
+	for row in range(3):
+		var row_z := local_z - float(sign) * float(row) * 0.18
+		for side_value in [-1.0, 1.0]:
+			var side: float = float(side_value)
+			var arm := MeshInstance3D.new()
+			var mesh := BoxMesh.new()
+			mesh.size = Vector3(0.095, 0.045, arm_length)
+			arm.mesh = mesh
+			arm.position = Vector3(side * x_offset, 0.82 + float(row) * 0.006, row_z - float(sign) * 0.055)
+			arm.rotation_degrees.y = side * float(sign) * 38.0
+			arm.material_override = _material(color, 3.4, 0.14, true)
+			parent.add_child(arm)
 
 func _build_pickers() -> void:
 	_clear_children(picker_root)
@@ -272,12 +274,15 @@ func blocked_feedback(sign: int) -> void:
 	tween.tween_property(self, "position", start - nudge, 0.045)
 	tween.tween_property(self, "position", start, 0.035)
 
-func animate_exit(world_direction: Vector3, distance: float) -> void:
+func animate_exit(world_direction: Vector3, distance: float, duration: float = 0.34) -> void:
 	busy = true
 	set_move_hints(false, false)
+	var direction := world_direction.normalized()
 	var tween := create_tween()
-	tween.tween_property(self, "position", position + world_direction.normalized() * distance, 0.48).set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_IN)
-	tween.parallel().tween_property(self, "scale", Vector3(0.18, 0.18, 0.18), 0.48).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	tween.tween_property(self, "scale", Vector3(1.18, 0.88, 1.18), 0.07).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tween.parallel().tween_property(self, "position", position + direction * 0.18, 0.07).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween.tween_property(self, "position", position + direction * distance, duration).set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_IN)
+	tween.parallel().tween_property(self, "scale", Vector3(0.12, 0.12, 0.12), duration).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	tween.tween_callback(_hide_after_exit)
 
 func _finish_move() -> void:
