@@ -53,3 +53,12 @@ jobs:
             echo 'Godot graphical smoke test reported a script/runtime error.'
             exit 1
           fi
+
+      - name: Capture TinyRush screenshot
+        run: xvfb-run -a timeout 30s ./godot --path . --rendering-method gl_compatibility --script res://tools/capture_screenshot.gd
+      - name: Upload TinyRush screenshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: tinyrush-original-screenie
+          path: artifacts/tinyrush-current.png
+          if-no-files-found: error
