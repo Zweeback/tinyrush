@@ -6,6 +6,7 @@ const ARROW_LEVEL_PATHS := [
 	"res://data/levels/arrow_city_02.json",
 	"res://data/levels/arrow_city_03.json"
 ]
+const BASE_CAMERA_FOV := 42.0
 
 @export var cell_size := 1.02
 
@@ -171,6 +172,7 @@ func restart_level() -> void:
 		child.free()
 	car_views.clear()
 
+	var spawn_index := 0
 	for car_id_value in board.car_ids():
 		var car_id := str(car_id_value)
 		var view: ParkingPanicCarView = CAR_SCENE.instantiate()
@@ -178,6 +180,9 @@ func restart_level() -> void:
 		view.configure(board.get_spec(car_id), cell_size)
 		view.position = _world_position(car_id)
 		car_views[car_id] = view
+		if game_mode == "arrow_escape":
+			view.animate_spawn(float(spawn_index) * 0.035)
+		spawn_index += 1
 
 	if game_mode == "arrow_escape":
 		status_label.text = "CLEAR ALL TRAFFIC"
@@ -188,6 +193,9 @@ func restart_level() -> void:
 
 	input_controller.set_enabled(true)
 	input_controller.reset_camera()
+	camera.fov = BASE_CAMERA_FOV
+	status_label.modulate = Color.WHITE
+	optimal_label.modulate = Color.WHITE
 	next_button.visible = false
 	_refresh_move_hints()
 	_update_ui()
@@ -311,6 +319,9 @@ func _on_arrow_tap(car_id: String) -> void:
 		combo = 0
 		flow_remaining = 0.0
 		score = maxi(0, score - 25)
+		status_label.modulate = Color(1.0, 0.34, 0.16, 1)
+		optimal_label.modulate = Color.WHITE
+		fx.impact_star(view.position + Vector3.UP * 0.20, Color(1.0, 0.25, 0.10, 1), 2)
 		view.blocked_feedback(local_sign)
 		fx.burst(view.position + Vector3.UP * 0.42, Color(1.0, 0.28, 0.12, 1), 7, 0.30)
 		audio.blocked_sound()
@@ -327,12 +338,18 @@ func _on_arrow_tap(car_id: String) -> void:
 	flow_remaining = maxf(0.72, flow_window - float(combo - 1) * 0.045)
 	score += 100 + combo * 30
 	is_busy = true
+	_refresh_move_hints()
+	var flow_color := _flow_color(combo)
+	status_label.modulate = flow_color
+	optimal_label.modulate = flow_color
 	view.set_move_hints(false, false)
 	var world_direction := Vector3(float(escape_dir.x), 0, float(escape_dir.y))
 	var burst_count := mini(22, 9 + combo * 2)
 	fx.burst(view.position + Vector3.UP * 0.34, view.body_color, burst_count, 0.42 + minf(0.35, float(combo) * 0.035))
-	fx.speed_trail(view.position + Vector3.UP * 0.30, world_direction, view.body_color, combo)
-	fx.camera_kick()
+	fx.impact_star(view.position + Vector3.UP * 0.18, flow_color, combo)
+	fx.speed_trail(view.position + Vector3.UP * 0.30, world_direction, flow_color, combo)
+	fx.combo_camera_kick(combo)
+	_combo_camera_punch(combo)
 	audio.move_sound(moves)
 	Input.vibrate_handheld(7 + mini(18, combo * 2))
 	var exit_duration := maxf(0.14, 0.31 - float(combo - 1) * 0.018)
@@ -354,14 +371,26 @@ func _complete_arrow_level() -> void:
 	input_controller.set_enabled(false)
 	selected_car_id = ""
 	score += 500 + best_combo * 50
+	var clear_color := _flow_color(maxi(best_combo, 10))
+	status_label.modulate = clear_color
+	optimal_label.modulate = clear_color
 	status_label.text = "RUN CLEARED · COMBO x%d · %05d!" % [best_combo, score]
 	hint_label.text = "FAST CLEAR · %d VEHICLES · KEEP THE FLOW" % moves
-	fx.burst(Vector3.ZERO + Vector3.UP * 0.8, Color(0.24, 0.95, 1.0, 1), 34, 1.25)
+	fx.burst(Vector3.ZERO + Vector3.UP * 0.8, clear_color, 42, 1.38)
+	fx.impact_star(Vector3.ZERO + Vector3.UP * 0.25, clear_color, 10)
+	_combo_camera_punch(10)
 	Input.vibrate_handheld(42)
 	audio.play_win_chime()
-	next_button.visible = true
-	next_button.text = "NEXT RUN ▶" if level_cursor + 1 < ARROW_LEVEL_PATHS.size() else "RESTART RUN ▶"
 	_update_ui()
+
+	if level_cursor + 1 < ARROW_LEVEL_PATHS.size():
+		next_button.visible = false
+		await get_tree().create_timer(0.78).timeout
+		if level_cleared:
+			_load_arrow_level_at(level_cursor + 1)
+	else:
+		next_button.visible = true
+		next_button.text = "RESTART RUN ▶"
 
 func _complete_level(hero: ParkingPanicCarView, sign: int) -> void:
 	is_busy = true
@@ -445,9 +474,14 @@ func _auto_solve_arrow() -> void:
 		best_combo = maxi(best_combo, combo)
 		flow_remaining = maxf(0.72, flow_window - float(combo - 1) * 0.045)
 		score += 100 + combo * 30
+		_refresh_move_hints()
+		var auto_flow_color := _flow_color(combo)
+		status_label.modulate = auto_flow_color
+		optimal_label.modulate = auto_flow_color
 		view.set_move_hints(false, false)
 		var auto_direction := Vector3(float(escape_dir.x), 0, float(escape_dir.y))
-		fx.speed_trail(view.position + Vector3.UP * 0.30, auto_direction, view.body_color, combo)
+		fx.impact_star(view.position + Vector3.UP * 0.18, auto_flow_color, combo)
+		fx.speed_trail(view.position + Vector3.UP * 0.30, auto_direction, auto_flow_color, combo)
 		var exit_duration := maxf(0.14, 0.29 - float(combo - 1) * 0.016)
 		view.animate_exit(auto_direction, cell_size * 10.5, exit_duration)
 		audio.move_sound(moves)
@@ -517,7 +551,7 @@ func _refresh_move_hints() -> void:
 			if level_cleared or not board.is_active(id):
 				view.set_move_hints(false, false)
 			else:
-				view.set_arrow_escape_state(board.can_escape(id))
+				view.set_arrow_escape_state(board.can_escape(id), combo)
 			continue
 		var can_backward := false
 		var can_forward := false
@@ -563,4 +597,24 @@ func _process(delta: float) -> void:
 	flow_remaining = maxf(0.0, flow_remaining - delta)
 	if flow_remaining <= 0.0:
 		combo = 0
+		status_label.modulate = Color.WHITE
+		optimal_label.modulate = Color.WHITE
+		_refresh_move_hints()
 		_update_ui()
+
+func _flow_color(level: int) -> Color:
+	if level >= 10:
+		return Color(1.0, 0.20, 0.72, 1)
+	if level >= 7:
+		return Color(1.0, 0.76, 0.08, 1)
+	if level >= 4:
+		return Color(0.48, 1.0, 0.12, 1)
+	return Color(0.08, 1.0, 0.86, 1)
+
+func _combo_camera_punch(level: int) -> void:
+	if level != 5 and level != 10:
+		return
+	var target_fov := 35.5 if level == 5 else 31.0
+	var tween := create_tween()
+	tween.tween_property(camera, "fov", target_fov, 0.075).set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_OUT)
+	tween.tween_property(camera, "fov", BASE_CAMERA_FOV, 0.24).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
