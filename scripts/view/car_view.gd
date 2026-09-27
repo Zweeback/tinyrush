@@ -9,7 +9,7 @@ var axis := Vector2i(1, 0)
 var length_cells := 2
 var cell_size := 1.0
 var is_target := false
-var vehicle_type := "compact"
+var vehicle_type := "car"
 var body_color := Color(0.2, 0.65, 1.0, 1.0)
 var busy := false
 var selected := false
@@ -27,7 +27,7 @@ func configure(spec: Dictionary, size: float) -> void:
 	length_cells = int(spec.get("len", 2))
 	cell_size = size
 	is_target = bool(spec.get("target", false))
-	vehicle_type = str(spec.get("vehicle_type", "compact")).to_lower()
+	vehicle_type = str(spec.get("vehicle_type", "car")).to_lower()
 	body_color = _color_from_array(spec.get("color", [0.2, 0.65, 1.0, 1.0]))
 	_build_visuals()
 	_build_pickers()
@@ -55,8 +55,6 @@ func _build_visuals() -> void:
 	match vehicle_type:
 		"truck":
 			_build_truck(full_length)
-		"van":
-			_build_van(full_length)
 		_:
 			_build_compact(full_length)
 	_build_common_details(full_length)
