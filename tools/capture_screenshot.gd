@@ -14,9 +14,12 @@ func _capture() -> void:
 
 	var viewport: Viewport = scene.get_viewport()
 	var image: Image = viewport.get_texture().get_image()
-	var output_dir := ProjectSettings.globalize_path("res://artifacts")
+	var workspace := OS.get_environment("GITHUB_WORKSPACE")
+	if workspace.is_empty():
+		workspace = ProjectSettings.globalize_path(".")
+	var output_dir := workspace.path_join("artifacts")
 	DirAccess.make_dir_recursive_absolute(output_dir)
-	var output_path := ProjectSettings.globalize_path("res://artifacts/tinyrush-current.png")
+	var output_path := output_dir.path_join("tinyrush-current.png")
 	var err := image.save_png(output_path)
 	if err != OK:
 		push_error("Screenshot save failed: %s" % error_string(err))
