@@ -248,7 +248,7 @@ func _on_move_requested(car_id: String, sign: int) -> void:
 	var view: ParkingPanicCarView = car_views.get(car_id)
 	if view == null or view.busy:
 		return
-	var result := board.apply_move(car_id, sign)
+	var result: Dictionary = board.apply_move(car_id, sign)
 	if not bool(result.get("ok", false)):
 		view.blocked_feedback(sign)
 		fx.burst(view.position + Vector3.UP * 0.35, Color(1.0, 0.22, 0.28, 1), 5, 0.26)
@@ -377,7 +377,7 @@ func _start_auto_solve() -> void:
 		var sign := int(step.get("sign", 1))
 		_select_car_force(car_id)
 		var view: ParkingPanicCarView = car_views.get(car_id)
-		var result := board.apply_move(car_id, sign)
+		var result: Dictionary = board.apply_move(car_id, sign)
 		if not bool(result.get("ok", false)):
 			_fail_auto("AUTO PATH FAILED")
 			return
