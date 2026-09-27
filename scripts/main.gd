@@ -2,7 +2,7 @@ extends Node3D
 
 const CAR_SCENE := preload("res://scenes/tiny_car.tscn")
 const LEVEL_PATH := "res://data/levels/arrow_city_01.json"
-const BASE_CAMERA_FOV := 42.0
+const BASE_CAMERA_FOV := 38.0
 
 @export var cell_size := 1.02
 
