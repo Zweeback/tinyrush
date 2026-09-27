@@ -88,6 +88,7 @@ func restart_level() -> void:
 	level_cleared = false
 	moves = 0
 	juice_chain = 0
+	best_juice_chain = 0
 	board.reset_from_level(level)
 
 	for child in cars_root.get_children():
@@ -106,6 +107,8 @@ func restart_level() -> void:
 			view.animate_spawn(float(spawn_index) * 0.02)
 			spawn_index += 1
 
+	status_label.modulate = Color.WHITE
+	optimal_label.modulate = Color.WHITE
 	status_label.text = "TAP A CAR"
 	hint_label.text = "Arrow = driving direction · blocked path = no move"
 	camera.fov = BASE_CAMERA_FOV
