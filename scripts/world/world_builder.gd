@@ -39,7 +39,6 @@ func build(level: Dictionary, size: float) -> void:
 	_build_top_roads()
 	_build_static_blockers()
 	_build_side_roads()
-	_build_side_traffic()
 	_build_city_dressing()
 	_build_exit_gate(level.get("exit", {}))
 
@@ -144,17 +143,29 @@ func _build_top_roads() -> void:
 			true
 		)
 
-	# A few dashed lane cues give the top face the Rush Hour toy-board feel.
-	for lane in range(bounds.y):
-		for dash in range(3):
-			var dash_x := -cube_width * 0.23 + float(dash) * cube_width * 0.23
-			var dash_z := board_offset.z + float(lane) * cell_size
+	# Discrete recessed slots make the surface read as a puzzle board, not a road diorama.
+	for x_index in range(bounds.x):
+		for y_index in range(bounds.y):
+			var cell_pos := board_offset + Vector3(float(x_index) * cell_size, 0.020, float(y_index) * cell_size)
+			var slot_color := (p["road"] as Color).lightened(0.035 if (x_index + y_index) % 2 == 0 else 0.018)
 			_add_box(
-				Vector3(cell_size * 0.22, 0.016, 0.045),
-				Vector3(dash_x, 0.020, dash_z),
-				Color(1, 1, 1, 0.55),
-				0.04,
-				0.72,
+				Vector3(cell_size * 0.90, 0.018, cell_size * 0.90),
+				cell_pos,
+				slot_color,
+				0.0,
+				0.84
+			)
+
+	# Small center ticks keep orientation readable without turning the board into a street texture.
+	for y_index in range(bounds.y):
+		for x_index in range(bounds.x):
+			var tick_pos := board_offset + Vector3(float(x_index) * cell_size, 0.034, float(y_index) * cell_size)
+			_add_box(
+				Vector3(cell_size * 0.18, 0.010, 0.035),
+				tick_pos,
+				Color(1, 1, 1, 0.36),
+				0.02,
+				0.76,
 				true
 			)
 
