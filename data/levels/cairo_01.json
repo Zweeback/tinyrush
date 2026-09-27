@@ -56,7 +56,7 @@
         0.22,
         1
       ],
-      "vehicle_type": "compact"
+      "vehicle_type": "hero"
     },
     {
       "id": "blue",
@@ -76,7 +76,7 @@
         1,
         1
       ],
-      "vehicle_type": "van"
+      "vehicle_type": "car"
     },
     {
       "id": "yellow",
@@ -116,7 +116,7 @@
         0.53,
         1
       ],
-      "vehicle_type": "compact"
+      "vehicle_type": "car"
     },
     {
       "id": "violet",
@@ -136,7 +136,7 @@
         0.96,
         1
       ],
-      "vehicle_type": "van"
+      "vehicle_type": "car"
     },
     {
       "id": "pink",
@@ -156,7 +156,7 @@
         0.66,
         1
       ],
-      "vehicle_type": "compact"
+      "vehicle_type": "car"
     },
     {
       "id": "orange",
@@ -176,7 +176,7 @@
         0.16,
         1
       ],
-      "vehicle_type": "van"
+      "vehicle_type": "car"
     }
   ],
   "optimal_moves": 12,
