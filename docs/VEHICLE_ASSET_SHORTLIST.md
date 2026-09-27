@@ -30,8 +30,10 @@ Goal: replace the procedural placeholder bodies with toy-like, readable vehicle 
 
 ## TinyRush three-archetype mapping
 
-1. **compact** — short 2-cell car; target/hero and agile pieces
-2. **van** — tall 2-cell blocker; same puzzle footprint, stronger visual mass
-3. **truck** — long 3-cell blocker; immediately communicates the larger footprint
+1. **hero** — the special red 2-cell target car
+2. **car** — normal 2-cell blockers
+3. **truck** — long 3-cell blockers
+
+This is the actual Rush Hour gameplay taxonomy. A van/SUV may later be a visual skin for a normal 2-cell car, but it is not a separate rules class.
 
 The model layer owns the archetype metadata. Imported meshes should only replace presentation; they must not define legal movement.
