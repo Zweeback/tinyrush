@@ -335,7 +335,7 @@ func _face_direction_to_world(face: String, direction: Vector2i) -> Vector3:
 
 func _validate_cube_level(data: Dictionary) -> Array[String]:
 	var errors: Array[String] = []
-	var bounds_value := data.get("bounds", [0, 0])
+	var bounds_value: Variant = data.get("bounds", [0, 0])
 	if not bounds_value is Array or bounds_value.size() < 2:
 		return ["missing bounds"]
 	var bounds := Vector2i(int(bounds_value[0]), int(bounds_value[1]))
@@ -353,9 +353,9 @@ func _validate_cube_level(data: Dictionary) -> Array[String]:
 		var car: Dictionary = raw
 		var car_id := str(car.get("id", ""))
 		var face := str(car.get("face", "top")).to_lower()
-		var pos_value := car.get("pos", [0, 0])
-		var axis_value := car.get("axis", [1, 0])
-		var dir_value := car.get("escape_dir", [1, 0])
+		var pos_value: Variant = car.get("pos", [0, 0])
+		var axis_value: Variant = car.get("axis", [1, 0])
+		var dir_value: Variant = car.get("escape_dir", [1, 0])
 		var length_cells := int(car.get("len", 2))
 		if car_id.is_empty() or ids.has(car_id):
 			errors.append("car ids must be unique")
