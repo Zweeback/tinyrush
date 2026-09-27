@@ -23,7 +23,7 @@ func build(level: Dictionary, size: float) -> void:
 	_build_island()
 	_build_roads()
 	_build_static_blockers()
-	_build_landmark(str(level.get("landmark", "eiffel")))
+	_build_landmark(str(level.get("landmark", "eiffel")), level)
 	_build_city_dressing()
 	var exit_data: Dictionary = level.get("exit", {})
 	_build_exit_gate(exit_data)
@@ -70,11 +70,41 @@ func _build_static_blockers() -> void:
 		_add_box(Vector3(cell_size * 0.72, 0.24, cell_size * 0.72), pos + Vector3(0, 0.13, 0), accent.darkened(0.18), 0.18, 0.72)
 		_add_box(Vector3(cell_size * 0.56, 0.08, 0.10), pos + Vector3(0, 0.31, 0), Color(0.96, 0.96, 0.94, 1), 0.10, 0.58)
 
-func _build_landmark(kind: String) -> void:
+func _build_landmark(kind: String, level: Dictionary) -> void:
+	var scene_path := str(level.get("landmark_scene", "")).strip_edges()
+	if not scene_path.is_empty() and _build_external_landmark(scene_path, level):
+		return
 	match kind:
 		"pyramid": _build_pyramid()
 		"tokyo_tower": _build_tokyo_tower()
 		_: _build_eiffel_tower()
+
+func _build_external_landmark(scene_path: String, level: Dictionary) -> bool:
+	if not ResourceLoader.exists(scene_path):
+		push_warning("Studio landmark not found: %s; using procedural fallback." % scene_path)
+		return false
+	var resource := load(scene_path)
+	if not resource is PackedScene:
+		push_warning("Studio landmark is not a PackedScene: %s; using procedural fallback." % scene_path)
+		return false
+	var instance := (resource as PackedScene).instantiate()
+	if not instance is Node3D:
+		push_warning("Studio landmark root is not Node3D: %s; using procedural fallback." % scene_path)
+		instance.queue_free()
+		return false
+	var node := instance as Node3D
+	var scale_value := float(level.get("landmark_scale", 1.0))
+	var yaw_degrees := float(level.get("landmark_yaw_degrees", 0.0))
+	var offset_raw: Array = level.get("landmark_offset", [0.0, 0.0, 0.0])
+	var offset := Vector3.ZERO
+	if offset_raw.size() >= 3:
+		offset = Vector3(float(offset_raw[0]), float(offset_raw[1]), float(offset_raw[2]))
+	node.position = _landmark_center() + offset
+	node.scale = Vector3.ONE * scale_value
+	node.rotation_degrees.y = yaw_degrees
+	node.name = "StudioLandmark"
+	add_child(node)
+	return true
 
 func _landmark_center() -> Vector3:
 	var cells: Array[Vector2i] = landmark_cells if not landmark_cells.is_empty() else static_cells
