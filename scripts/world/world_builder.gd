@@ -35,12 +35,13 @@ func build(level: Dictionary, size: float) -> void:
 
 	cube_width = float(bounds.x) * cell_size + 1.12
 	cube_depth = float(bounds.y) * cell_size + 1.12
-	cube_height = 0.74 if arrow_mode else maxf(cube_width, cube_depth) * 0.78
+	cube_height = maxf(cube_width, cube_depth) * (0.92 if arrow_mode else 0.78)
 
 	if arrow_mode:
-		_build_arcade_platform()
+		_build_cube_body()
 		_build_top_roads()
 		_build_static_blockers()
+		_build_side_roads()
 		_build_city_dressing()
 	else:
 		_build_cube_body()
