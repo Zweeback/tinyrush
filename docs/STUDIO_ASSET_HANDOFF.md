@@ -17,7 +17,7 @@ The studio should publish a game/mobile GLB with:
 
 Copy the selected GLB under `assets/studio/<world>/` and add these optional level properties:
 
-- `landmark_scene`: Godot resource path to the GLB.
+- `landmark_scene`: Godot resource path to the GLB (use the normal `res` scheme at runtime).
 - `landmark_scale`: uniform scale, default `1.0`.
 - `landmark_yaw_degrees`: Y rotation, default `0`.
 - `landmark_offset`: local XYZ offset from the logical landmark center.
