@@ -7,6 +7,7 @@ var board_offset := Vector3.ZERO
 var static_cells: Array[Vector2i] = []
 var landmark_cells: Array[Vector2i] = []
 var theme := "paris"
+var arrow_mode := false
 
 var cube_width := 7.2
 var cube_depth := 7.2
@@ -22,6 +23,7 @@ func build(level: Dictionary, size: float) -> void:
 		-float(bounds.y - 1) * cell_size * 0.5
 	)
 	theme = str(level.get("theme", "paris")).to_lower()
+	arrow_mode = str(level.get("mode", "")) == "arrow_escape"
 
 	static_cells.clear()
 	for raw_cell in level.get("static_cells", []):
@@ -33,14 +35,20 @@ func build(level: Dictionary, size: float) -> void:
 
 	cube_width = float(bounds.x) * cell_size + 1.12
 	cube_depth = float(bounds.y) * cell_size + 1.12
-	cube_height = max(cube_width, cube_depth) * 0.78
+	cube_height = 0.74 if arrow_mode else maxf(cube_width, cube_depth) * 0.78
 
-	_build_cube_body()
-	_build_top_roads()
-	_build_static_blockers()
-	_build_side_roads()
-	_build_city_dressing()
-	_build_exit_gate(level.get("exit", {}))
+	if arrow_mode:
+		_build_arcade_platform()
+		_build_top_roads()
+		_build_static_blockers()
+		_build_city_dressing()
+	else:
+		_build_cube_body()
+		_build_top_roads()
+		_build_static_blockers()
+		_build_side_roads()
+		_build_city_dressing()
+		_build_exit_gate(level.get("exit", {}))
 
 func clear() -> void:
 	for child in get_children():
@@ -56,6 +64,33 @@ func _palette() -> Dictionary:
 		"accent3": Color(1.0, 0.72, 0.12, 1),
 		"ground": Color(0.16, 0.72, 0.58, 1)
 	}
+
+func _build_arcade_platform() -> void:
+	var p: Dictionary = _palette()
+	# Shallow floating toy platform for the fast arrow mode.
+	_add_box(
+		Vector3(cube_width + 0.92, 0.48, cube_depth + 0.92),
+		Vector3(0, -0.34, 0),
+		Color(0.15, 0.07, 0.30, 1),
+		0.0,
+		0.48
+	)
+	_add_box(
+		Vector3(cube_width + 0.62, 0.18, cube_depth + 0.62),
+		Vector3(0, -0.10, 0),
+		p["frame"] as Color,
+		0.0,
+		0.38
+	)
+
+	var accent: Color = p["accent"] as Color
+	var accent2: Color = p["accent2"] as Color
+	var accent3: Color = p["accent3"] as Color
+	_add_box(Vector3(cube_width * 0.62, 0.07, 0.10), Vector3(0, 0.035, -cube_depth * 0.5 - 0.18), accent, 1.8, 0.22)
+	_add_box(Vector3(cube_width * 0.44, 0.07, 0.10), Vector3(0, 0.036, cube_depth * 0.5 + 0.18), accent2, 1.6, 0.22)
+	_add_box(Vector3(0.10, 0.07, cube_depth * 0.32), Vector3(-cube_width * 0.5 - 0.18, 0.037, 0), accent3, 1.4, 0.22)
+	_add_box(Vector3(0.10, 0.07, cube_depth * 0.24), Vector3(cube_width * 0.5 + 0.18, 0.038, 0), Color(0.55, 0.98, 0.30, 1), 1.4, 0.22)
+
 
 func _build_cube_body() -> void:
 	var p: Dictionary = _palette()
