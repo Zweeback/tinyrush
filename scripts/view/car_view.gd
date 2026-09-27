@@ -10,6 +10,8 @@ var length_cells := 2
 var cell_size := 1.0
 var is_target := false
 var vehicle_type := "car"
+var arrow_mode := false
+var escape_dir := Vector2i.ZERO
 var body_color := Color(0.2, 0.65, 1.0, 1.0)
 var busy := false
 var selected := false
@@ -28,12 +30,17 @@ func configure(spec: Dictionary, size: float) -> void:
 	cell_size = size
 	is_target = bool(spec.get("target", false))
 	vehicle_type = str(spec.get("vehicle_type", "car")).to_lower()
+	arrow_mode = bool(spec.get("arrow_mode", false))
+	escape_dir = spec.get("escape_dir", Vector2i.ZERO)
 	body_color = _color_from_array(spec.get("color", [0.2, 0.65, 1.0, 1.0]))
 	_build_visuals()
 	_build_pickers()
 	_orient_to_axis()
 	set_selected(false)
-	set_move_hints(false, false)
+	if arrow_mode:
+		set_arrow_escape_state(false)
+	else:
+		set_move_hints(false, false)
 
 func set_selected(value: bool) -> void:
 	selected = value
@@ -48,6 +55,26 @@ func set_move_hints(can_backward: bool, can_forward: bool) -> void:
 		backward_hint_root.visible = can_backward
 	if forward_hint_root != null:
 		forward_hint_root.visible = can_forward
+
+func set_arrow_escape_state(can_escape: bool) -> void:
+	if backward_hint_root == null or forward_hint_root == null:
+		return
+	var sign := _local_escape_sign()
+	backward_hint_root.visible = sign < 0
+	forward_hint_root.visible = sign > 0
+	var color := Color(0.20, 0.96, 1.0, 0.96) if can_escape else Color(1.0, 0.34, 0.12, 0.94)
+	var root := forward_hint_root if sign > 0 else backward_hint_root
+	_recolor_hint(root, color)
+
+func _local_escape_sign() -> int:
+	if escape_dir == -axis:
+		return -1
+	return 1
+
+func _recolor_hint(root: Node3D, color: Color) -> void:
+	for child in root.get_children():
+		if child is MeshInstance3D:
+			(child as MeshInstance3D).material_override = _material(color, 2.8, 0.18, true)
 
 func _build_visuals() -> void:
 	_clear_children(visual_root)
