@@ -150,7 +150,10 @@ func _try_arrow_move(car_id: String) -> void:
 			status_label.text = "TAP A CAR"
 		return
 
-	board.active[car_id] = false
+	var move_result := board.apply_move(car_id, 1)
+	if not bool(move_result.get("ok", false)):
+		view.blocked_feedback(local_sign)
+		return
 	moves += 1
 	juice_chain += 1
 	best_juice_chain = maxi(best_juice_chain, juice_chain)
@@ -168,10 +171,16 @@ func _try_arrow_move(car_id: String) -> void:
 		_reward_camera_punch(juice_chain)
 	audio.move_sound(moves)
 	Input.vibrate_handheld(7 + mini(12, juice_chain))
-	view.animate_exit(world_direction, cell_size * 9.0, maxf(0.16, 0.24 - float(juice_chain) * 0.006))
+	if bool(move_result.get("transition", false)):
+		var start_transform := view.transform
+		view.configure(board.get_spec(car_id), cell_size)
+		view.transform = start_transform
+		view.animate_wrap(_world_transform(car_id), maxf(0.20, 0.34 - float(juice_chain) * 0.006))
+	else:
+		view.animate_exit(world_direction, cell_size * 9.0, maxf(0.16, 0.24 - float(juice_chain) * 0.006))
 
 	status_label.modulate = reward_color
-	status_label.text = "CHAIN x%d · %d LEFT" % [juice_chain, board.remaining_count()]
+	status_label.text = "WRAP → %s" % str(move_result.get("to_face", "")).to_upper() if bool(move_result.get("transition", false)) else "CHAIN x%d · %d LEFT" % [juice_chain, board.remaining_count()]
 	_update_ui()
 
 	await get_tree().create_timer(0.32).timeout
@@ -185,44 +194,7 @@ func _try_arrow_move(car_id: String) -> void:
 	_update_ui()
 
 func _route_clear(car_id: String) -> bool:
-	var car: ParkingCarState = board.get_car(car_id)
-	if car == null or not board.is_active(car_id):
-		return false
-
-	var direction := car.escape_dir
-	if direction == Vector2i.ZERO:
-		return false
-
-	var occupied := {}
-	for other_value in board.car_ids():
-		var other_id := str(other_value)
-		if other_id == car_id or not board.is_active(other_id):
-			continue
-
-		var other: ParkingCarState = board.get_car(other_id)
-		if other.face != car.face:
-			continue
-
-		for cell in other.occupied_cells():
-			occupied[cell] = other_id
-
-	var cells := car.occupied_cells()
-	var lead: Vector2i = cells[0]
-	var best_dot := lead.x * direction.x + lead.y * direction.y
-
-	for cell in cells:
-		var dot := cell.x * direction.x + cell.y * direction.y
-		if dot > best_dot:
-			best_dot = dot
-			lead = cell
-
-	var cursor := lead + direction
-	while board.inside(cursor):
-		if occupied.has(cursor):
-			return false
-		cursor += direction
-
-	return true
+	return board.can_escape(car_id)
 
 func _refresh_arrows() -> void:
 	for id_value in car_views.keys():

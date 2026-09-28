@@ -23,4 +23,4 @@ The target look is a **large physical puzzle cube** covered in road grids and co
 
 ## Next mechanical milestone
 
-The decorative side-face traffic is **not** a substitute for the real cube mechanic. Cross-face movement must be implemented in the board/topology model and solver first, then the view can animate legal transitions around cube edges.
+The first real cross-face slice now runs through the board, cube topology, solver and view: selected vehicles can wrap over a legal cube edge, keep their lane coordinate, rotate into the adjacent face basis, remain active there, and only leave the puzzle after their declared edge-hop budget is exhausted. Destination occupancy participates in legality, so traffic on the next face creates actual arrangement dependencies instead of decoration-only scenery.

@@ -56,6 +56,7 @@
       "len": 2,
       "target": false,
       "vehicle_type": "car",
+      "edge_hops": 1,
       "color": [
         1,
         0.16,
@@ -156,6 +157,7 @@
       "len": 3,
       "target": false,
       "vehicle_type": "truck",
+      "edge_hops": 1,
       "color": [
         0.62,
         0.3,
@@ -313,5 +315,6 @@
         1
       ]
     }
-  ]
+  ],
+  "optimal_moves": 14
 }
