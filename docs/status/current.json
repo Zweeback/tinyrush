@@ -1,0 +1,10 @@
+{
+  "repository": "Zweeback/tinyrush",
+  "commit_sha": "d7ab105e80ba2a1a506097a6363b12642949fd27",
+  "captured_at": "2026-08-20T02:40:31.557371+00:00",
+  "kind": "godot",
+  "target": "application/run/main_scene",
+  "workflow_run": "32325429036",
+  "generator_version": "current-visual-v1",
+  "automated": true
+}

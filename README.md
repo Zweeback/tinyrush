@@ -1,5 +1,12 @@
 # Parking Panic
 
+## Current visual
+
+![Current runtime visual](docs/status/current.png)
+
+Automated CI capture of the configured main scene. Commit and workflow provenance: [`docs/status/current.json`](docs/status/current.json).
+
+
 Tiny 3D traffic puzzle in Godot 4.3: one-cell sliding-car logic, rotatable landmark diorama worlds, deterministic puzzle data and a path toward cube-face driving.
 
 ## Current playable slice — 0.5.1-alpha
