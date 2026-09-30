@@ -2,11 +2,22 @@ class_name CubeFaceTopology
 extends RefCounted
 
 const FACES := ["top", "front", "right", "back", "left", "bottom"]
+const CARDINAL_DIRECTIONS := [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]
 
 static func wrap_pose(face: String, pos: Vector2i, axis: Vector2i, direction: Vector2i, length_cells: int, bounds: Vector2i) -> Dictionary:
 	var old_frame := face_frame(face)
-	if old_frame.is_empty() or direction not in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+	if old_frame.is_empty() or direction not in CARDINAL_DIRECTIONS:
 		return {}
+	if bounds.x <= 0 or bounds.y <= 0 or length_cells < 1:
+		return {}
+
+	var expected_axis := Vector2i(absi(direction.x), absi(direction.y))
+	if axis != expected_axis:
+		return {}
+	for i in range(length_cells):
+		var source_cell := pos + axis * i
+		if source_cell.x < 0 or source_cell.x >= bounds.x or source_cell.y < 0 or source_cell.y >= bounds.y:
+			return {}
 
 	var move_world: Vector3i = old_frame["u"] * direction.x + old_frame["v"] * direction.y
 	var next_face := face_for_normal(move_world)
