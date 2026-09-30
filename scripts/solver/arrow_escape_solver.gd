@@ -2,6 +2,9 @@ class_name ArrowEscapeSolver
 extends RefCounted
 
 func solve(board: ArrowEscapeBoard, max_states: int = 100000) -> Dictionary:
+	if board.requires_topology_state():
+		return _solve_topology(board, max_states)
+
 	var start: Dictionary = board.active_map()
 	var start_key := board.state_key(start)
 	var queue: Array[Dictionary] = [start]
@@ -32,6 +35,49 @@ func solve(board: ArrowEscapeBoard, max_states: int = 100000) -> Dictionary:
 			visited[next_key] = true
 			parents[next_key] = key
 			parent_moves[next_key] = {"id": car_id}
+			queue.append(next_state)
+			queue_keys.append(next_key)
+
+	return {"solved": false, "moves": -1, "path": [], "states_visited": visited.size(), "limit_reached": false}
+
+func _solve_topology(board: ArrowEscapeBoard, max_states: int) -> Dictionary:
+	var start := board.export_state()
+	var start_key := board.topology_state_key()
+	var queue: Array[Dictionary] = [start]
+	var queue_keys: Array[String] = [start_key]
+	var head := 0
+	var visited := {start_key: true}
+	var parents := {}
+	var parent_moves := {}
+
+	while head < queue.size():
+		if visited.size() >= max_states:
+			return {"solved": false, "moves": -1, "path": [], "states_visited": visited.size(), "limit_reached": true}
+
+		var state: Dictionary = queue[head]
+		var key: String = queue_keys[head]
+		head += 1
+		var current := ArrowEscapeBoard.new()
+		current.configure(board.source_level())
+		current.import_state(state)
+
+		if current.remaining_count() == 0:
+			var path := _reconstruct_path(key, parents, parent_moves)
+			return {"solved": true, "moves": path.size(), "path": path, "states_visited": visited.size(), "limit_reached": false}
+
+		for step in current.legal_steps():
+			var car_id := str(step.get("id", ""))
+			var move := current.apply_move(car_id, 1)
+			if not bool(move.get("ok", false)):
+				continue
+			var next_state := current.export_state()
+			var next_key := current.topology_state_key()
+			current.import_state(state)
+			if visited.has(next_key):
+				continue
+			visited[next_key] = true
+			parents[next_key] = key
+			parent_moves[next_key] = {"id": car_id, "transition": bool(move.get("transition", false))}
 			queue.append(next_state)
 			queue_keys.append(next_key)
 

@@ -10,6 +10,7 @@ var color := Color(0.2, 0.65, 1.0, 1.0)
 var vehicle_type := "car"
 var escape_dir := Vector2i.ZERO
 var face := "top"
+var edge_hops_remaining := 0
 
 static func from_dictionary(data: Dictionary) -> ParkingCarState:
 	var car := ParkingCarState.new()
@@ -21,6 +22,7 @@ static func from_dictionary(data: Dictionary) -> ParkingCarState:
 	car.color = _color(data.get("color", [0.2, 0.65, 1.0, 1.0]))
 	car.escape_dir = _vec2i(data.get("escape_dir", [0, 0]))
 	car.face = str(data.get("face", "top")).to_lower()
+	car.edge_hops_remaining = maxi(0, int(data.get("edge_hops", 0)))
 	var declared_type := str(data.get("vehicle_type", "")).to_lower()
 	if declared_type in ["hero", "car", "truck"]:
 		car.vehicle_type = declared_type
@@ -50,6 +52,7 @@ func to_view_spec() -> Dictionary:
 		"vehicle_type": vehicle_type,
 		"escape_dir": escape_dir,
 		"face": face,
+		"edge_hops": edge_hops_remaining,
 		"color": [color.r, color.g, color.b, color.a]
 	}
 

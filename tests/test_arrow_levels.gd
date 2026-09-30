@@ -29,7 +29,20 @@ func _init() -> void:
 				printerr("FAIL %s cube_validation=%s" % [path, cube_errors])
 				failures += 1
 				continue
-			print("PASS %s cube_faces=3 vehicles=%d" % [str(level.get("id", path)), level.get("cars", []).size()])
+			var cube_board := ArrowEscapeBoard.new()
+			cube_board.configure(level)
+			var cube_solver := ArrowEscapeSolver.new()
+			var cube_solved := cube_solver.solve(cube_board)
+			if not bool(cube_solved.get("solved", false)):
+				printerr("FAIL %s cube_unsolved" % path)
+				failures += 1
+				continue
+			var expected_cube := int(level.get("optimal_moves", -1))
+			if int(cube_solved.get("moves", -1)) != expected_cube:
+				printerr("FAIL %s cube expected=%d actual=%d" % [path, expected_cube, int(cube_solved.get("moves", -1))])
+				failures += 1
+				continue
+			print("PASS %s cube_faces=3 vehicles=%d moves=%d states=%d" % [str(level.get("id", path)), level.get("cars", []).size(), expected_cube, int(cube_solved.get("states_visited", 0))])
 			continue
 
 		var errors := legacy_validator.validate(level)

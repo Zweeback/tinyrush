@@ -331,6 +331,18 @@ func animate_exit(world_direction: Vector3, distance: float, duration: float = 0
 	tween.parallel().tween_property(self, "scale", Vector3(0.12, 0.12, 0.12), duration).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 	tween.tween_callback(_hide_after_exit)
 
+func animate_wrap(target_transform: Transform3D, duration: float = 0.34) -> void:
+	busy = true
+	set_move_hints(false, false)
+	var start_transform := transform
+	var edge_transform := start_transform.interpolate_with(target_transform, 0.5)
+	var outward := (start_transform.basis.y + target_transform.basis.y).normalized()
+	edge_transform.origin += outward * 0.34
+	var tween := create_tween()
+	tween.tween_property(self, "transform", edge_transform, duration * 0.48).set_trans(Tween.TRANS_QUART).set_ease(Tween.EASE_IN)
+	tween.tween_property(self, "transform", target_transform, duration * 0.52).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tween.tween_callback(_finish_move)
+
 func _finish_move() -> void:
 	busy = false
 
