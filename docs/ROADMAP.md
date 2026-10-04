@@ -3,7 +3,7 @@
 ## M0.5 — Audited world-tour slice (current)
 - 3 verified worlds: Paris, Cairo, Tokyo
 - deterministic tap-vs-orbit input
-- one-cell moves, undo, restart, auto-solve
+- Rush Hour axis constraints + Arrows-style maximal one-tap slides, undo, restart, auto-solve
 - runtime level validation + BFS
 - landmark obstacles and world progression
 - static scene/resource contracts + headless CI definition
@@ -16,7 +16,7 @@
 - pooled/asset-based audio and FX instead of procedural placeholders
 - stronger combo/parking feedback without obscuring puzzle readability
 
-## M2 — Signature mechanic
+## M2 — Signature mechanic: world-surface driving
 - cube-face topology in pure board model
 - solver supports face transitions
 - cars wrap across cube edges
