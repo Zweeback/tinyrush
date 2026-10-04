@@ -191,7 +191,7 @@ func _on_move_requested(car_id: String, sign: int) -> void:
 	moves += 1
 	is_busy = true
 	var cell_steps := int(result.get("cell_steps", 1))
-	var slide_duration := min(0.34, 0.11 + float(cell_steps) * 0.055)
+	var slide_duration: float = minf(0.34, 0.11 + float(cell_steps) * 0.055)
 	view.animate_to(_world_position(car_id), slide_duration)
 	fx.burst(view.position + Vector3.UP * 0.30, view.body_color, 6 + cell_steps * 2, 0.30 + float(cell_steps) * 0.05)
 	fx.camera_kick()
@@ -247,7 +247,7 @@ func _start_auto_solve() -> void:
 			return
 		moves += 1
 		var cell_steps := int(result.get("cell_steps", 1))
-		var slide_duration := min(0.34, 0.11 + float(cell_steps) * 0.055)
+		var slide_duration: float = minf(0.34, 0.11 + float(cell_steps) * 0.055)
 		view.animate_to(_world_position(car_id), slide_duration)
 		fx.burst(view.position + Vector3.UP * 0.30, view.body_color, 6 + cell_steps * 2, 0.30 + float(cell_steps) * 0.05)
 		audio.move_sound(moves)
