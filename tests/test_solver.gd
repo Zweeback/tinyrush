@@ -12,18 +12,27 @@ func _init() -> void:
 		printerr("FAIL: invalid level JSON")
 		quit(1)
 		return
+
 	var board := ParkingBoard.new()
 	board.configure(parsed)
 	var solver := ParkingPanicSolver.new()
-	var result := solver.solve(board)
-	print(JSON.stringify(result))
-	if not bool(result.get("solved", false)):
-		printerr("FAIL: solver found no solution")
+
+	var cell_result: Dictionary = solver.solve(board)
+	if not bool(cell_result.get("solved", false)) or int(cell_result.get("moves", -1)) != 9:
+		printerr("FAIL: paris cell solver expected 9, got %s" % cell_result.get("moves", -1))
 		quit(1)
 		return
-	if int(result.get("moves", -1)) != 9:
-		printerr("FAIL: expected 9 optimal cell moves, got %s" % result.get("moves", -1))
+
+	var tap_result: Dictionary = solver.solve_slides(board)
+	print(JSON.stringify(tap_result))
+	if not bool(tap_result.get("solved", false)):
+		printerr("FAIL: tap solver found no solution")
 		quit(1)
 		return
-	print("PASS: paris_01 optimal solution = 9 cell moves")
+	if int(tap_result.get("moves", -1)) != 3:
+		printerr("FAIL: expected 3 optimal taps, got %s" % tap_result.get("moves", -1))
+		quit(1)
+		return
+
+	print("PASS: paris_01 = 9 classic cell moves / 3 Arrows-style taps")
 	quit(0)
