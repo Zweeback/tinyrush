@@ -59,10 +59,22 @@ func _init() -> void:
 			failures += 1
 			continue
 
-		print("PASS: %s optimal=%d states=%d peak_queue=%d" % [level_id, actual, int(result.get("states_visited", 0)), int(result.get("peak_queue", 0))])
+		var tap_result: Dictionary = solver.solve_slides(board, CI_SOLVER_STATE_LIMIT)
+		var expected_taps := int(level.get("optimal_taps", -1))
+		var actual_taps := int(tap_result.get("moves", -1))
+		if bool(tap_result.get("limit_reached", false)):
+			printerr("FAIL: %s tap solver exceeded CI state limit" % level_id)
+			failures += 1
+			continue
+		if not bool(tap_result.get("solved", false)) or expected_taps < 0 or actual_taps != expected_taps:
+			printerr("FAIL: %s expected_taps=%d actual_taps=%d" % [level_id, expected_taps, actual_taps])
+			failures += 1
+			continue
+
+		print("PASS: %s cells=%d taps=%d cell_states=%d tap_states=%d" % [level_id, actual, actual_taps, int(result.get("states_visited", 0)), int(tap_result.get("states_visited", 0))])
 
 	if failures > 0:
 		quit(1)
 	else:
-		print("PASS: all %d levels validated, solved and replayed" % catalog.size())
+		print("PASS: all %d levels validated in classic and tap-slide modes" % catalog.size())
 		quit(0)
