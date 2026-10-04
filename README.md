@@ -1,13 +1,13 @@
 # Parking Panic
 
-Tiny 3D traffic puzzle in Godot 4.3: one-cell sliding-car logic, rotatable landmark diorama worlds, deterministic puzzle data and a path toward cube-face driving.
+Tiny 3D traffic puzzle in Godot 4.3: Rush Hour constraints with Arrows-style one-tap maximal slides, rotatable landmark diorama worlds, deterministic puzzle data and a path toward cube-face driving.
 
 ## Current playable slice — 0.5.1-alpha
 
-- Paris / Eiffel Tower Jam — optimal 9 cell moves
-- Cairo / Pyramid Gridlock — optimal 12 cell moves
-- Tokyo / Neon Crossing — optimal 12 cell moves
-- tap an endcap to move one cell, or tap the body and use large ◀/▶ fallback controls
+- Paris / Eiffel Tower Jam — 9 classic cell moves / 3 optimal taps
+- Cairo / Pyramid Gridlock — 12 classic cell moves / 6 optimal taps
+- Tokyo / Neon Crossing — 12 classic cell moves / 4 optimal taps
+- tap an endcap to launch that vehicle as far as it can legally slide; body selection + ◀/▶ uses the same action
 - drag anywhere to orbit after a movement threshold; tap actions fire on release, reducing accidental moves
 - pinch/mouse-wheel zoom
 - undo, restart, auto-solve, haptics, synthetic placeholder audio and particles

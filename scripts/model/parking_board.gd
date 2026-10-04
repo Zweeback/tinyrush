@@ -103,6 +103,74 @@ func apply_move(car_id: String, sign: int) -> Dictionary:
 	car.grid_pos = next_pos
 	return {"ok": true, "exit": false, "id": car_id, "sign": sign, "from": from, "to": next_pos}
 
+func preview_slide(car_id: String, sign: int, state: Dictionary = {}) -> Dictionary:
+	if sign != -1 and sign != 1:
+		return {"ok": false, "exit": false, "reason": "invalid_sign", "cell_steps": 0}
+	var car: ParkingCarState = get_car(car_id)
+	if car == null:
+		return {"ok": false, "exit": false, "reason": "missing_car", "cell_steps": 0}
+	var positions: Dictionary = clone_positions() if state.is_empty() else state.duplicate(true)
+	var start: Vector2i = positions.get(car_id, car.grid_pos)
+	var current: Vector2i = start
+	var cell_steps := 0
+
+	while true:
+		if can_exit(car_id, sign, positions):
+			return {
+				"ok": true,
+				"exit": true,
+				"id": car_id,
+				"sign": sign,
+				"from": start,
+				"to": current,
+				"cell_steps": cell_steps
+			}
+		var next_pos: Vector2i = current + car.axis * sign
+		if not can_place(car_id, next_pos, positions):
+			break
+		current = next_pos
+		positions[car_id] = current
+		cell_steps += 1
+
+	if cell_steps == 0:
+		return {"ok": false, "exit": false, "reason": "blocked", "cell_steps": 0}
+	return {
+		"ok": true,
+		"exit": false,
+		"id": car_id,
+		"sign": sign,
+		"from": start,
+		"to": current,
+		"cell_steps": cell_steps
+	}
+
+func apply_slide(car_id: String, sign: int) -> Dictionary:
+	var result: Dictionary = preview_slide(car_id, sign)
+	if not bool(result.get("ok", false)):
+		return result
+	if not bool(result.get("exit", false)):
+		set_position(car_id, result.get("to", get_position(car_id)))
+	return result
+
+func legal_slides(state: Dictionary = {}) -> Array[Dictionary]:
+	var positions: Dictionary = clone_positions() if state.is_empty() else state
+	var result: Array[Dictionary] = []
+	for car_id_value in car_ids():
+		var car_id := str(car_id_value)
+		for sign_value in [-1, 1]:
+			var sign := int(sign_value)
+			var slide: Dictionary = preview_slide(car_id, sign, positions)
+			if not bool(slide.get("ok", false)):
+				continue
+			result.append({
+				"id": car_id,
+				"sign": sign,
+				"exit": bool(slide.get("exit", false)),
+				"to": slide.get("to", positions.get(car_id, Vector2i.ZERO)),
+				"cell_steps": int(slide.get("cell_steps", 0))
+			})
+	return result
+
 func can_place(car_id: String, at_pos: Vector2i, state: Dictionary = {}) -> bool:
 	var car: ParkingCarState = get_car(car_id)
 	if car == null:

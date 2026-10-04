@@ -36,5 +36,23 @@ func _init() -> void:
 		quit(1)
 		return
 
-	print("PASS: board rules replay paris optimal path")
+	var tap_board := ParkingBoard.new()
+	tap_board.configure(level)
+	var first_slide: Dictionary = tap_board.apply_slide("blue", -1)
+	if not bool(first_slide.get("ok", false)) or int(first_slide.get("cell_steps", 0)) != 1:
+		printerr("FAIL: blue maximal slide did not stop at expected blocker")
+		quit(1)
+		return
+	var second_slide: Dictionary = tap_board.apply_slide("yellow", 1)
+	if not bool(second_slide.get("ok", false)) or int(second_slide.get("cell_steps", 0)) != 3:
+		printerr("FAIL: yellow maximal slide did not travel three cells")
+		quit(1)
+		return
+	var exit_slide: Dictionary = tap_board.apply_slide("hero", 1)
+	if not bool(exit_slide.get("ok", false)) or not bool(exit_slide.get("exit", false)):
+		printerr("FAIL: hero maximal slide did not exit")
+		quit(1)
+		return
+
+	print("PASS: board rules replay classic path and 3-tap hybrid path")
 	quit(0)

@@ -67,6 +67,14 @@ func _build_visuals() -> void:
 		_box(Vector3(0.13, 0.09, 0.045), Vector3(x_pos, 0.22, full_length * 0.5 + 0.02), Color(1.0, 0.90, 0.56, 1), 2.0)
 		_box(Vector3(0.12, 0.09, 0.045), Vector3(x_pos, 0.22, -full_length * 0.5 - 0.02), Color(1.0, 0.10, 0.22, 1), 1.7)
 
+	for sign_value in [-1.0, 1.0]:
+		var sign := float(sign_value)
+		var arrow_z := sign * full_length * 0.28
+		for side_value in [-1.0, 1.0]:
+			var side := float(side_value)
+			var marker := _box(Vector3(0.075, 0.035, 0.30), Vector3(side * 0.09, 0.61, arrow_z), Color(1.0, 0.86, 0.22, 1), 2.4)
+			marker.rotation_degrees.y = side * sign * 32.0
+
 	selection_marker = MeshInstance3D.new()
 	var marker_mesh := BoxMesh.new()
 	marker_mesh.size = Vector3(0.92, 0.035, full_length + 0.12)

@@ -150,6 +150,7 @@
     }
   ],
   "optimal_moves": 9,
+  "optimal_taps": 3,
   "optimal_path": [
     {
       "id": "blue",

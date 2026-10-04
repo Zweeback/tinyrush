@@ -1,18 +1,24 @@
 class_name ParkingPanicSolver
 extends RefCounted
 
-# One grid-cell slide counts as one move, matching the actual game input.
-# The queue stores states only; parent/move maps reconstruct the path on success.
-# This avoids copying the whole path into every queued state.
+# Two metrics deliberately coexist:
+# - solve(): classic Rush Hour, one grid cell per move (level-design audit)
+# - solve_slides(): Arrows-style, one tap slides maximally until blocked/exit (actual gameplay)
 func solve(board: ParkingBoard, max_states: int = 250000) -> Dictionary:
-	var start := board.clone_positions()
+	return _solve(board, false, max_states)
+
+func solve_slides(board: ParkingBoard, max_states: int = 250000) -> Dictionary:
+	return _solve(board, true, max_states)
+
+func _solve(board: ParkingBoard, maximal_slides: bool, max_states: int) -> Dictionary:
+	var start: Dictionary = board.clone_positions()
 	var start_key := board.state_key(start)
 	var queue: Array[Dictionary] = [start]
 	var queue_keys: Array[String] = [start_key]
 	var head := 0
-	var visited := {start_key: true}
-	var parents := {}
-	var parent_moves := {}
+	var visited: Dictionary = {start_key: true}
+	var parents: Dictionary = {}
+	var parent_moves: Dictionary = {}
 	var peak_queue := 1
 
 	while head < queue.size():
@@ -23,26 +29,35 @@ func solve(board: ParkingBoard, max_states: int = 250000) -> Dictionary:
 				"states_visited": visited.size(),
 				"peak_queue": peak_queue,
 				"limit_reached": true,
-				"path": []
+				"path": [],
+				"mode": "tap" if maximal_slides else "cell"
 			}
 
 		var state: Dictionary = queue[head]
 		var state_key: String = queue_keys[head]
 		head += 1
+		var steps: Array[Dictionary] = board.legal_slides(state) if maximal_slides else board.legal_steps(state)
 
-		for step in board.legal_steps(state):
+		for step in steps:
 			var car_id := str(step.get("id", ""))
 			var sign := int(step.get("sign", 0))
+			var action := {
+				"id": car_id,
+				"sign": sign,
+				"exit": bool(step.get("exit", false)),
+				"cell_steps": int(step.get("cell_steps", 1))
+			}
 			if bool(step.get("exit", false)):
 				var solved_path := _reconstruct_path(state_key, parents, parent_moves)
-				solved_path.append({"id": car_id, "sign": sign, "exit": true})
+				solved_path.append(action)
 				return {
 					"solved": true,
 					"moves": solved_path.size(),
 					"states_visited": visited.size(),
 					"peak_queue": peak_queue,
 					"limit_reached": false,
-					"path": solved_path
+					"path": solved_path,
+					"mode": "tap" if maximal_slides else "cell"
 				}
 
 			var next_state := state.duplicate(true)
@@ -53,7 +68,7 @@ func solve(board: ParkingBoard, max_states: int = 250000) -> Dictionary:
 				continue
 			visited[next_key] = true
 			parents[next_key] = state_key
-			parent_moves[next_key] = {"id": car_id, "sign": sign, "exit": false}
+			parent_moves[next_key] = action
 			queue.append(next_state)
 			queue_keys.append(next_key)
 			peak_queue = max(peak_queue, queue.size() - head)
@@ -64,7 +79,8 @@ func solve(board: ParkingBoard, max_states: int = 250000) -> Dictionary:
 		"states_visited": visited.size(),
 		"peak_queue": peak_queue,
 		"limit_reached": false,
-		"path": []
+		"path": [],
+		"mode": "tap" if maximal_slides else "cell"
 	}
 
 func _reconstruct_path(end_key: String, parents: Dictionary, parent_moves: Dictionary) -> Array:

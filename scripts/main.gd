@@ -14,7 +14,8 @@ var history: Array[Dictionary] = []
 var board_offset := Vector3.ZERO
 var moves := 0
 var is_busy := false
-var optimal_moves := -1
+var optimal_taps := -1
+var optimal_cell_moves := -1
 var selected_car_id := ""
 var auto_path: Array = []
 var level_cleared := false
@@ -74,20 +75,30 @@ func _load_level_at(index: int) -> void:
 		return
 	board.configure(level)
 	var solver := ParkingPanicSolver.new()
-	var solved := solver.solve(board)
-	if not bool(solved.get("solved", false)):
+	var cell_result := solver.solve(board)
+	if not bool(cell_result.get("solved", false)):
 		_fail_boot("LEVEL UNSOLVABLE")
 		return
-	optimal_moves = int(solved.get("moves", -1))
-	var declared_optimal := int(level.get("optimal_moves", -1))
-	if declared_optimal >= 0 and declared_optimal != optimal_moves:
-		_fail_boot("OPTIMAL MISMATCH: DATA %d / SOLVER %d" % [declared_optimal, optimal_moves])
+	optimal_cell_moves = int(cell_result.get("moves", -1))
+	var declared_cell_optimal := int(level.get("optimal_moves", -1))
+	if declared_cell_optimal >= 0 and declared_cell_optimal != optimal_cell_moves:
+		_fail_boot("CELL OPTIMAL MISMATCH: DATA %d / SOLVER %d" % [declared_cell_optimal, optimal_cell_moves])
 		return
-	auto_path = solved.get("path", []).duplicate(true)
+
+	var tap_result := solver.solve_slides(board)
+	if not bool(tap_result.get("solved", false)):
+		_fail_boot("LEVEL NOT SOLVABLE IN TAP MODE")
+		return
+	optimal_taps = int(tap_result.get("moves", -1))
+	var declared_tap_optimal := int(level.get("optimal_taps", -1))
+	if declared_tap_optimal >= 0 and declared_tap_optimal != optimal_taps:
+		_fail_boot("TAP OPTIMAL MISMATCH: DATA %d / SOLVER %d" % [declared_tap_optimal, optimal_taps])
+		return
+	auto_path = tap_result.get("path", []).duplicate(true)
 	board_offset = _calculate_board_offset()
 	world_builder.build(level, cell_size)
 	_update_level_labels()
-	self_test_label.text = "SELF TEST · DATA + SOLVER OK · %d CARS · OPT %d" % [board.car_ids().size(), optimal_moves]
+	self_test_label.text = "SELF TEST · HYBRID OK · %d CARS · CELL %d · TAP %d" % [board.car_ids().size(), optimal_cell_moves, optimal_taps]
 	restart_level()
 
 func next_level() -> void:
@@ -113,7 +124,7 @@ func restart_level() -> void:
 		view.position = _world_position(car_id)
 		car_views[car_id] = view
 	status_label.text = "FREE THE RED CAR"
-	hint_label.text = "Tap an end to move · tap center + ◀ ▶ as fallback · drag anywhere to orbit"
+	hint_label.text = "ARROWS × RUSH HOUR · tap an end to launch until blocked · ◀ ▶ same action · drag to orbit"
 	input_controller.set_enabled(true)
 	input_controller.reset_camera()
 	next_button.visible = false
@@ -164,7 +175,7 @@ func _on_move_requested(car_id: String, sign: int) -> void:
 	var view: ParkingPanicCarView = car_views.get(car_id)
 	if view == null or view.busy:
 		return
-	var result := board.apply_move(car_id, sign)
+	var result := board.apply_slide(car_id, sign)
 	if not bool(result.get("ok", false)):
 		view.blocked_feedback(sign)
 		fx.burst(view.position + Vector3.UP * 0.35, Color(1.0, 0.22, 0.28, 1), 5, 0.26)
@@ -179,13 +190,16 @@ func _on_move_requested(car_id: String, sign: int) -> void:
 	history.append({"id": car_id, "from": result.get("from", Vector2i.ZERO)})
 	moves += 1
 	is_busy = true
-	view.animate_to(_world_position(car_id), 0.14)
-	fx.burst(view.position + Vector3.UP * 0.30, view.body_color, 7, 0.34)
+	var cell_steps := int(result.get("cell_steps", 1))
+	var slide_duration: float = minf(0.34, 0.11 + float(cell_steps) * 0.055)
+	view.animate_to(_world_position(car_id), slide_duration)
+	fx.burst(view.position + Vector3.UP * 0.30, view.body_color, 6 + cell_steps * 2, 0.30 + float(cell_steps) * 0.05)
 	fx.camera_kick()
 	audio.move_sound(moves)
-	Input.vibrate_handheld(8)
+	Input.vibrate_handheld(8 + min(cell_steps, 4) * 2)
+	status_label.text = "SLIDE ×%d" % cell_steps
 	_update_ui()
-	await get_tree().create_timer(0.15).timeout
+	await get_tree().create_timer(slide_duration + 0.02).timeout
 	is_busy = false
 	_update_ui()
 
@@ -196,7 +210,7 @@ func _complete_level(hero: ParkingPanicCarView, sign: int) -> void:
 	moves += 1
 	_update_ui()
 	status_label.text = "%s CLEARED!" % str(level.get("world", "WORLD"))
-	hint_label.text = "PERFECT CLEAR" if moves == optimal_moves else "CLEAR · OPTIMAL IS %d" % optimal_moves
+	hint_label.text = "PERFECT TAP CLEAR" if moves == optimal_taps else "CLEAR · BEST IS %d TAPS" % optimal_taps
 	fx.burst(hero.position + Vector3.UP * 0.4, Color(1.0, 0.78, 0.18, 1), 28, 1.15)
 	fx.burst(hero.position + Vector3.UP * 0.4, hero.body_color, 18, 0.82)
 	var axis: Vector2i = board.get_spec(board.target_id).get("axis", Vector2i(1, 0))
@@ -215,7 +229,7 @@ func _start_auto_solve() -> void:
 		return
 	restart_level()
 	is_busy = true
-	status_label.text = "AUTO SOLVE · %d MOVES" % optimal_moves
+	status_label.text = "AUTO SOLVE · %d TAPS" % optimal_taps
 	input_controller.set_enabled(false)
 	for step_value in auto_path:
 		var step: Dictionary = step_value
@@ -223,7 +237,7 @@ func _start_auto_solve() -> void:
 		var sign := int(step.get("sign", 1))
 		_select_car_force(car_id)
 		var view: ParkingPanicCarView = car_views.get(car_id)
-		var result := board.apply_move(car_id, sign)
+		var result := board.apply_slide(car_id, sign)
 		if not bool(result.get("ok", false)):
 			_fail_auto("AUTO PATH FAILED")
 			return
@@ -232,11 +246,13 @@ func _start_auto_solve() -> void:
 			_complete_level(view, sign)
 			return
 		moves += 1
-		view.animate_to(_world_position(car_id), 0.18)
-		fx.burst(view.position + Vector3.UP * 0.30, view.body_color, 6, 0.30)
+		var cell_steps := int(result.get("cell_steps", 1))
+		var slide_duration: float = minf(0.34, 0.11 + float(cell_steps) * 0.055)
+		view.animate_to(_world_position(car_id), slide_duration)
+		fx.burst(view.position + Vector3.UP * 0.30, view.body_color, 6 + cell_steps * 2, 0.30 + float(cell_steps) * 0.05)
 		audio.move_sound(moves)
 		_update_ui()
-		await get_tree().create_timer(0.28).timeout
+		await get_tree().create_timer(slide_duration + 0.12).timeout
 	_fail_auto("AUTO PATH DID NOT EXIT")
 
 func _select_car_force(car_id: String) -> void:
@@ -286,8 +302,8 @@ func _update_level_labels() -> void:
 	progress_label.text = "%d / %d" % [level_cursor + 1, catalog.size()]
 
 func _update_ui() -> void:
-	move_label.text = "MOVES %02d" % moves
-	optimal_label.text = "OPT %02d" % optimal_moves if optimal_moves >= 0 else "OPT --"
+	move_label.text = "TAPS %02d" % moves
+	optimal_label.text = "BEST %02d" % optimal_taps if optimal_taps >= 0 else "BEST --"
 	selected_label.text = "SELECTED: NONE" if selected_car_id.is_empty() else "SELECTED: %s" % selected_car_id.to_upper()
 	undo_button.disabled = history.is_empty() or is_busy or level_cleared
 	auto_button.disabled = is_busy
