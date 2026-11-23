@@ -40,7 +40,7 @@ jobs:
         run: |
           keytool -genkeypair -noprompt -keystore "$RUNNER_TEMP/debug.keystore" -alias androiddebugkey -storepass android -keypass android -keyalg RSA -keysize 2048 -validity 365 -dname "CN=Android Debug,O=CI,C=US"
           mkdir -p "$HOME/.config/godot"
-          cat > "$HOME/.config/godot/editor_settings-4.tres" <<EOF
+          cat > "$HOME/.config/godot/editor_settings-4.3.tres" <<EOF
           [gd_resource type="EditorSettings" format=3]
 
           [resource]
@@ -55,7 +55,10 @@ jobs:
           set -euo pipefail
           mkdir -p build
           godot --headless --path . --editor --import
-          godot --headless --path . --export-debug "Android Debug" build/tinyrush-debug.apk
+          export GODOT_ANDROID_KEYSTORE_DEBUG_PATH="$RUNNER_TEMP/debug.keystore"
+          export GODOT_ANDROID_KEYSTORE_DEBUG_USER=androiddebugkey
+          export GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD=android
+          godot --headless --verbose --path . --export-debug "Android Debug" build/tinyrush-debug.apk
           test "$(stat -c %s build/tinyrush-debug.apk)" -gt 1048576
       - name: Verify APK identity
         run: |
